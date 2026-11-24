@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 140 20% 98.5%;
+    --foreground: 160 30% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 160 30% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 30% 10%;
+
+    /* Official VET BOX Emerald Brand Green (#00B664) */
+    --primary: 153 100% 36%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 153 100% 30%;
+
+    /* Deep forest teal for medical depth */
+    --secondary: 168 62% 23%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 168 62% 19%;
+
+    --muted: 150 18% 95%;
+    --muted-foreground: 160 12% 42%;
+
+    /* Restrained amber for medical alerts & due reminders */
+    --accent: 38 95% 50%;
+    --accent-foreground: 38 95% 15%;
+
+    --destructive: 0 78% 54%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 150 16% 89%;
+    --input: 150 16% 89%;
+    --ring: 153 100% 36%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 160 35% 5%;
+    --foreground: 150 20% 96%;
+
+    --card: 160 30% 8%;
+    --card-foreground: 150 20% 96%;
+
+    --popover: 160 30% 8%;
+    --popover-foreground: 150 20% 96%;
+
+    --primary: 153 85% 44%;
+    --primary-foreground: 160 35% 5%;
+    --primary-hover: 153 85% 50%;
+
+    --secondary: 168 50% 35%;
+    --secondary-foreground: 160 35% 5%;
+    --secondary-hover: 168 50% 40%;
+
+    --muted: 160 20% 14%;
+    --muted-foreground: 150 15% 65%;
+
+    --accent: 38 90% 50%;
+    --accent-foreground: 160 35% 5%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 160 20% 18%;
+    --input: 160 20% 18%;
+    --ring: 153 85% 44%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    direction: rtl;
+    text-align: right;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Typography scale */
+  h1 {
+    @apply text-3xl md:text-5xl font-black tracking-tight text-foreground font-display;
+    line-height: 1.2;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl font-extrabold tracking-tight text-foreground font-display;
+    line-height: 1.25;
+  }
+
+  h3 {
+    @apply text-lg md:text-xl font-bold text-foreground;
+    line-height: 1.35;
+  }
+
+  h4 {
+    @apply text-base md:text-lg font-semibold text-foreground;
+    line-height: 1.4;
+  }
+
+  p {
+    line-height: 1.7;
+  }
+}
+
+/* Custom premium scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 182, 100, 0.12);
+}
+
+.gradient-mesh {
+  background: radial-gradient(at 0% 0%, rgba(0, 182, 100, 0.08) 0px, transparent 50%),
+              radial-gradient(at 100% 100%, rgba(16, 89, 74, 0.06) 0px, transparent 50%);
+}
