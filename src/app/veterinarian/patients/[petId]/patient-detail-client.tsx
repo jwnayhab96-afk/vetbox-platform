@@ -49,7 +49,7 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
       setVetId(user.id);
       const [petResult, vetResult, visitResult, vaccinationResult, rxResult] = await Promise.all([
         supabase.from("pets").select("*").eq("id", petId).single(),
-        supabase.from("veterinarian_profiles").select("*, profile:profiles(*)").eq("id", user.id).single(),
+        supabase.from("veterinarian_profiles").select("*, profile:profiles!veterinarian_profiles_id_fkey(*)").eq("id", user.id).single(),
         supabase.from("medical_visits").select("*").eq("pet_id", petId).order("visit_date", { ascending: false }),
         supabase.from("vaccination_records").select("*").eq("pet_id", petId).order("administration_date", { ascending: false }),
         supabase.from("prescriptions").select("*").eq("pet_id", petId).order("created_at", { ascending: false }),

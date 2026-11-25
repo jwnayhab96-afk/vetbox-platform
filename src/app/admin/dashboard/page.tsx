@@ -36,7 +36,7 @@ export default function AdminDashboardPage() {
     const supabase = createClient();
     const [usersResult, vetsResult, petsResult, clinicsResult, logsResult] = await Promise.all([
       supabase.from("profiles").select("*", { count: "exact" }),
-      supabase.from("veterinarian_profiles").select("*, profile:profiles(*)"),
+      supabase.from("veterinarian_profiles").select("*, profile:profiles!veterinarian_profiles_id_fkey(*)"),
       supabase.from("pets").select("id, name, owner_id"),
       supabase.from("clinics").select("*"),
       supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(20),

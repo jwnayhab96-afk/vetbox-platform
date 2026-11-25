@@ -72,7 +72,7 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
         supabase.from("vaccination_plans").select("*").eq("pet_id", petId).order("recommended_date"),
         supabase.from("medications").select("*").eq("pet_id", petId).order("created_at", { ascending: false }),
         supabase.from("prescriptions").select("*").eq("pet_id", petId).order("created_at", { ascending: false }),
-        supabase.from("pet_vet_links").select("*, vet:veterinarian_profiles(*, profile:profiles(*))").eq("pet_id", petId),
+        supabase.from("pet_vet_links").select("*, vet:veterinarian_profiles!pet_vet_links_vet_id_fkey(*, profile:profiles!veterinarian_profiles_id_fkey(*))").eq("pet_id", petId),
         supabase.from("veterinarian_directory").select("*"),
       ]);
       if (!active) return;
@@ -163,7 +163,7 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
     const { data, error } = await createClient().from("pet_vet_links").insert({
       pet_id: pet.id, vet_id: selectedVetId, requested_by: currentProfile.id,
       permission_scope: "full_clinical_access", notes: linkNotes || null, status: "pending",
-    }).select("*, vet:veterinarian_profiles(*, profile:profiles(*))").single();
+    }).select("*, vet:veterinarian_profiles!pet_vet_links_vet_id_fkey(*, profile:profiles!veterinarian_profiles_id_fkey(*))").single();
     setLinkSaving(false);
     if (error || !data) { window.alert(error?.message || "تعذر إرسال طلب الربط"); return; }
     setLinks((items) => [...items, data]); setShowLinkModal(false); setSelectedVetId(""); setLinkNotes(""); triggerConfetti();

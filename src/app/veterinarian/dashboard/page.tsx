@@ -38,7 +38,7 @@ export default function VetDashboardPage() {
     try {
       const supabase = createClient();
       const [vetResult, linkResult, visitResult] = await Promise.all([
-        supabase.from("veterinarian_profiles").select("*, profile:profiles(*)").eq("id", userId).single(),
+        supabase.from("veterinarian_profiles").select("*, profile:profiles!veterinarian_profiles_id_fkey(*)").eq("id", userId).single(),
         supabase.from("pet_vet_links").select("*, pet:pets(*)").eq("vet_id", userId).order("created_at", { ascending: false }),
         supabase.from("medical_visits").select("*").eq("vet_id", userId).order("visit_date", { ascending: false }),
       ]);

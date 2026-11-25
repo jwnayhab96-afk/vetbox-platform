@@ -18,7 +18,7 @@ export default function OwnerVeterinariansPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { window.location.assign("/auth/login"); return; }
       const { data, error } = await supabase.from("pet_vet_links")
-        .select("*, pet:pets!inner(name, owner_id), vet:veterinarian_profiles(*, profile:profiles(*))")
+        .select("*, pet:pets!inner(name, owner_id), vet:veterinarian_profiles!pet_vet_links_vet_id_fkey(*, profile:profiles!veterinarian_profiles_id_fkey(*))")
         .eq("pets.owner_id", user.id).order("created_at", { ascending: false });
       if (!error) setLinks(data || []);
     };

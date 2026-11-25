@@ -18,7 +18,7 @@ export default function AdminArticlesPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const loadArticles = async () => {
-    const { data, error } = await createClient().from("articles").select("*, reviewer:veterinarian_profiles(*, profile:profiles(*))").order("created_at", { ascending: false });
+    const { data, error } = await createClient().from("articles").select("*, reviewer:veterinarian_profiles!articles_reviewer_id_fkey(*, profile:profiles!veterinarian_profiles_id_fkey(*))").order("created_at", { ascending: false });
     if (error) setError(error.message); else { setArticles(data || []); setError(null); }
     setLoading(false);
   };

@@ -16,7 +16,7 @@ export default function AdminVeterinariansPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadVeterinarians = async () => {
-    const { data, error } = await createClient().from("veterinarian_profiles").select("*, profile:profiles(*)").order("created_at", { ascending: false });
+    const { data, error } = await createClient().from("veterinarian_profiles").select("*, profile:profiles!veterinarian_profiles_id_fkey(*)").order("created_at", { ascending: false });
     if (error) { setLoadError(error.message); setLoading(false); return; }
     setVets(data || []);
     setLoadError(null);
