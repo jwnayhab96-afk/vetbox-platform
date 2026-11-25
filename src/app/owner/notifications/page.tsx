@@ -1,21 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDateTime } from "@/lib/utils";
 import { Bell, Check, ExternalLink } from "lucide-react";
 
 export default function NotificationsPage() {
-  const currentProfile = store.getCurrentProfile();
-  const [notifications, setNotifications] = useState(() => store.getNotifications(currentProfile.id));
+  const [userId, setUserId] = useState("");
+  const [notifications, setNotifications] = useState<any[]>([]);
 
-  const handleMarkRead = (id: string) => {
-    store.markNotificationAsRead(id);
-    setNotifications([...store.getNotifications(currentProfile.id)]);
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.assign("/auth/login"); return; }
+      setUserId(user.id);
+      const { data, error } = await supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+      if (!error) setNotifications(data || []);
+    };
+    load();
+  }, []);
+
+  const handleMarkRead = async (id: string) => {
+    const { error } = await createClient().from("notifications").update({ is_read: true }).eq("id", id).eq("user_id", userId);
+    if (!error) setNotifications((items) => items.map((item) => item.id === id ? { ...item, is_read: true } : item));
   };
 
   return (

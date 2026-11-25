@@ -50,11 +50,11 @@ export function PetIdCardModal({
   const ageDisplay = calculateAge(pet.birth_date, pet.estimated_age_months);
   
   // URL that the QR code encodes (points to the live pet verification or profile)
-  const currentOrigin = typeof window !== "undefined" ? window.location.origin : "https://vetbox.eg";
-  const profileUrl = `${currentOrigin}/owner/pets/${pet.id}`;
+  const currentOrigin = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
+  const profileUrl = `${currentOrigin}/verify/pet/${pet.id}`;
 
-  const ownerName = owner?.full_name || "أحمد الشناوي";
-  const ownerPhone = owner?.phone || "01012345678";
+  const ownerName = owner?.full_name || "غير مسجل";
+  const ownerPhone = owner?.phone || "غير مسجل";
 
   // Canvas drawing and download function
   const handleDownloadImage = async () => {

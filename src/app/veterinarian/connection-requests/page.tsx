@@ -1,21 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate, SPECIES_LABELS } from "@/lib/utils";
 import { Users, CheckCircle2, XCircle, Clock, ShieldAlert } from "lucide-react";
 
 export default function VetConnectionRequestsPage() {
-  const vetId = "33333333-3333-3333-3333-333333333333";
-  const [links, setLinks] = useState(() => store.getLinksForVet(vetId));
+  const [vetId, setVetId] = useState("");
+  const [links, setLinks] = useState<any[]>([]);
 
-  const handleAction = (linkId: string, status: "accepted" | "rejected") => {
-    store.updateConnectionStatus(linkId, status, vetId);
-    setLinks([...store.getLinksForVet(vetId)]);
+  const load = async (userId: string) => {
+    const { data, error } = await createClient().from("pet_vet_links").select("*, pet:pets(*)").eq("vet_id", userId).order("created_at", { ascending: false });
+    if (!error) setLinks(data || []);
+  };
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (!user) { window.location.assign("/auth/login"); return; }
+      setVetId(user.id); load(user.id);
+    });
+  }, []);
+
+  const handleAction = async (linkId: string, status: "accepted" | "rejected") => {
+    const { error } = await createClient().from("pet_vet_links").update({ status, responded_at: new Date().toISOString() }).eq("id", linkId).eq("vet_id", vetId);
+    if (error) { window.alert(error.message); return; }
+    await load(vetId);
   };
 
   return (

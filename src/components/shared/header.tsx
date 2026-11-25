@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell, Plus, Menu, X, Check, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 
 interface HeaderProps {
   title: string;
@@ -20,8 +20,19 @@ interface HeaderProps {
 
 export function Header({ title, subtitle, action, role }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
-  const currentProfile = store.getCurrentProfile();
-  const notifications = store.getNotifications(currentProfile.id);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
+      if (active) setNotifications(data || []);
+    };
+    load();
+    return () => { active = false; };
+  }, [role]);
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
@@ -89,7 +100,10 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
                         <span className="font-semibold text-foreground text-xs">{item.title}</span>
                         {!item.is_read && (
                           <button
-                            onClick={() => store.markNotificationAsRead(item.id)}
+                            onClick={async () => {
+                              const { error } = await createClient().from("notifications").update({ is_read: true }).eq("id", item.id);
+                              if (!error) setNotifications((items) => items.map((n) => n.id === item.id ? { ...n, is_read: true } : n));
+                            }}
                             title="تحديد كمقروء"
                             className="text-primary hover:text-primary-hover"
                           >

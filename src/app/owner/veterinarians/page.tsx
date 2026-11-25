@@ -1,19 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
 import { Stethoscope, ShieldCheck, Phone, MapPin, Search, Plus, UserX } from "lucide-react";
 
 export default function OwnerVeterinariansPage() {
-  const currentProfile = store.getCurrentProfile();
-  const pets = store.getPets(currentProfile.id);
-  const links = pets.flatMap((p) => store.getLinksForPet(p.id));
+  const [links, setLinks] = useState<any[]>([]);
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.assign("/auth/login"); return; }
+      const { data, error } = await supabase.from("pet_vet_links")
+        .select("*, pet:pets!inner(name, owner_id), vet:veterinarian_profiles(*, profile:profiles(*))")
+        .eq("pets.owner_id", user.id).order("created_at", { ascending: false });
+      if (!error) setLinks(data || []);
+    };
+    load();
+  }, []);
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
@@ -99,10 +109,11 @@ export default function OwnerVeterinariansPage() {
                     variant="ghost"
                     size="sm"
                     className="text-xs text-destructive hover:bg-destructive/10"
-                    onClick={() => {
+                    onClick={async () => {
                       if (confirm("هل أنت متأكد من رغبتك في إلغاء ربط هذا الطبيب؟")) {
-                        store.updateConnectionStatus(lnk.id, "revoked", currentProfile.id);
-                        alert("تم إلغاء الربط بنجاح.");
+                        const { error } = await createClient().from("pet_vet_links").update({ status: "revoked", revoked_at: new Date().toISOString() }).eq("id", lnk.id);
+                        if (error) alert(error.message);
+                        else setLinks((items) => items.map((item) => item.id === lnk.id ? { ...item, status: "revoked" } : item));
                       }
                     }}
                   >

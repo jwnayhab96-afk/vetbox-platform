@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { InteractiveClinicsMap } from "@/components/clinics/interactive-clinics-map";
 import {
   calculateDistanceKm,
@@ -46,8 +46,15 @@ export default function ClinicsDirectoryPage() {
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [sortByDistance, setSortByDistance] = useState(false);
+  const [rawClinics, setRawClinics] = useState<any[]>([]);
 
-  const rawClinics = store.getClinics();
+  useEffect(() => {
+    createClient().from("clinics").select("*").order("name_ar", { ascending: true })
+      .then(({ data, error }) => {
+        if (error) console.error("Unable to load clinics", error);
+        else setRawClinics(data || []);
+      });
+  }, []);
 
   // Handle GPS location request
   const handleGetLocation = async () => {
@@ -347,7 +354,7 @@ export default function ClinicsDirectoryPage() {
                       )}
 
                       <div className="flex flex-wrap gap-1.5 pt-1">
-                        {clinic.services.slice(0, 4).map((srv, idx) => (
+                        {clinic.services.slice(0, 4).map((srv: string, idx: number) => (
                           <span key={idx} className="text-[11px] bg-muted px-2.5 py-0.5 rounded-lg text-muted-foreground font-medium">
                             {srv}
                           </span>

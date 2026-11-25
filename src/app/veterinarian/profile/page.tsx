@@ -1,31 +1,39 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { Stethoscope, Check } from "lucide-react";
 
 export default function VetProfilePage() {
-  const vetId = "33333333-3333-3333-3333-333333333333";
-  const [vet, setVet] = useState(() => store.getVeterinarianById(vetId) || store.getVeterinarians()[0]);
-
-  const [bio, setBio] = useState(vet.bio || "");
-  const [clinicName, setClinicName] = useState(vet.clinic_affiliation_name || "");
-  const [fee, setFee] = useState(vet.consultation_fee);
-  const [emergency, setEmergency] = useState(vet.emergency_available);
+  const [vetId, setVetId] = useState("");
+  const [bio, setBio] = useState("");
+  const [clinicName, setClinicName] = useState("");
+  const [fee, setFee] = useState(0);
+  const [emergency, setEmergency] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.assign("/auth/login"); return; }
+      setVetId(user.id);
+      const { data, error } = await supabase.from("veterinarian_profiles").select("*").eq("id", user.id).single();
+      if (!error && data) { setBio(data.bio || ""); setClinicName(data.clinic_affiliation_name || ""); setFee(data.consultation_fee || 0); setEmergency(!!data.emergency_available); }
+    };
+    load();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    vet.bio = bio;
-    vet.clinic_affiliation_name = clinicName;
-    vet.consultation_fee = Number(fee);
-    vet.emergency_available = emergency;
+    const { error } = await createClient().from("veterinarian_profiles").update({ bio, clinic_affiliation_name: clinicName, consultation_fee: Number(fee), emergency_available: emergency, updated_at: new Date().toISOString() }).eq("id", vetId);
+    if (error) { window.alert(error.message); return; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

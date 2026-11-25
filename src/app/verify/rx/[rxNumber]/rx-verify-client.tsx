@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,22 +30,28 @@ export default function RxPublicVerificationClient({ rxNumber: propRxNumber }: {
   const rawRxNumber = propRxNumber || (params?.rxNumber as string);
   const rxNumber = decodeURIComponent(rawRxNumber || "");
 
-  const [prescription, setPrescription] = useState(() =>
-    store.getPrescriptionByRxNumber(rxNumber)
-  );
+  const [prescription, setPrescription] = useState<any>(null);
+  const [checked, setChecked] = useState(false);
+  useEffect(() => {
+    createClient().rpc("verify_prescription", { number: rxNumber })
+      .then(({ data, error }) => {
+        if (error) console.error("Prescription verification failed", error);
+        setPrescription(data || null); setChecked(true);
+      });
+  }, [rxNumber]);
 
-  const handleToggleDispensed = () => {
+  const handleToggleDispensed = async () => {
     if (!prescription) return;
-    const updated = store.togglePrescriptionDispensed(prescription.id);
-    if (updated) {
-      setPrescription({ ...updated });
-    }
+    const { error } = await createClient().rpc("mark_prescription_dispensed", { target_prescription_id: prescription.id });
+    if (error) { window.alert("تأكيد الصرف متاح للطبيب المعالج أو إدارة المنصة فقط."); return; }
+    setPrescription({ ...prescription, status: "dispensed" });
   };
 
   const handlePrint = () => {
     window.print();
   };
 
+  if (!prescription && !checked) return <div className="min-h-screen flex items-center justify-center">جارٍ التحقق من الروشتة…</div>;
   if (!prescription) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 text-right">
@@ -234,7 +240,7 @@ export default function RxPublicVerificationClient({ rxNumber: propRxNumber }: {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-800">
-                  {prescription.items.map((it, idx) => (
+                {prescription.items.map((it: any, idx: number) => (
                     <tr key={it.id} className="hover:bg-slate-50/70">
                       <td className="p-3 text-center font-bold text-slate-400">{idx + 1}</td>
                       <td className="p-3 font-bold text-slate-900">{it.medication_name}</td>

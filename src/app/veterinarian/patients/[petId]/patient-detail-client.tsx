@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { calculateAge, formatArabicDate, SPECIES_LABELS } from "@/lib/utils";
 import { PrescriptionModal } from "@/components/medical/prescription-modal";
 import { Prescription, PrescriptionItem } from "@/lib/types/database.types";
@@ -34,12 +34,32 @@ import {
 export default function VetPatientDetailClient({ petId: propPetId }: { petId?: string }) {
   const params = useParams();
   const petId = propPetId || (params?.id as string) || (params?.petId as string);
-  const vetId = "33333333-3333-3333-3333-333333333333";
+  const [vetId, setVetId] = useState("");
+  const [vet, setVet] = useState<any>(null);
+  const [pet, setPet] = useState<any>(null);
+  const [visits, setVisits] = useState<any[]>([]);
+  const [vaccinations, setVaccinations] = useState<any[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
 
-  const pet = store.getPetById(petId);
-  const [visits, setVisits] = useState(() => store.getVisitsByPet(petId));
-  const [vaccinations, setVaccinations] = useState(() => store.getVaccinationsByPet(petId));
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>(() => store.getPrescriptionsByPet(petId));
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.assign("/auth/login"); return; }
+      setVetId(user.id);
+      const [petResult, vetResult, visitResult, vaccinationResult, rxResult] = await Promise.all([
+        supabase.from("pets").select("*").eq("id", petId).single(),
+        supabase.from("veterinarian_profiles").select("*, profile:profiles(*)").eq("id", user.id).single(),
+        supabase.from("medical_visits").select("*").eq("pet_id", petId).order("visit_date", { ascending: false }),
+        supabase.from("vaccination_records").select("*").eq("pet_id", petId).order("administration_date", { ascending: false }),
+        supabase.from("prescriptions").select("*").eq("pet_id", petId).order("created_at", { ascending: false }),
+      ]);
+      setPet(petResult.data); setVet(vetResult.data);
+      setVisits(visitResult.data || []); setVaccinations(vaccinationResult.data || []);
+      setPrescriptions(rxResult.data || []);
+    };
+    load();
+  }, [petId]);
 
   // Quick vaccine recording modal
   const [showVaccineModal, setShowVaccineModal] = useState(false);
@@ -77,12 +97,12 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
   const speciesMeta = SPECIES_LABELS[pet.species] || { ar: pet.species, icon: "Sparkles" };
   const ageDisplay = calculateAge(pet.birth_date, pet.estimated_age_months);
 
-  const handleSaveVaccine = (e: React.FormEvent) => {
+  const handleSaveVaccine = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!vacName || !vacDate) return;
 
     setVacSaving(true);
-    store.addVaccinationRecord({
+    const { data, error } = await createClient().from("vaccination_records").insert({
       pet_id: pet.id,
       administered_by_vet_id: vetId,
       created_by: vetId,
@@ -94,16 +114,11 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
       manufacturer: vacManufacturer || null,
       is_verified_by_vet: true,
       notes: "تم الإعطاء في العيادة بواسطة الطبيب المعالج.",
-    });
-
-    setTimeout(() => {
-      setVaccinations(store.getVaccinationsByPet(pet.id));
-      setVacSaving(false);
-      setShowVaccineModal(false);
-      setVacName("");
-      setVacTarget("");
-      setVacBatch("");
-    }, 400);
+    }).select("*").single();
+    setVacSaving(false);
+    if (error || !data) { window.alert(error?.message || "تعذر حفظ التطعيم"); return; }
+    setVaccinations((items) => [data, ...items]); setShowVaccineModal(false);
+    setVacName(""); setVacTarget(""); setVacBatch("");
   };
 
   const handleAddRxItem = () => {
@@ -124,7 +139,7 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
     setRxItems(updated);
   };
 
-  const handleSavePrescription = (e: React.FormEvent) => {
+  const handleSavePrescription = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rxDiagnosis) return;
     const validItems = rxItems.filter((it) => it.medication_name.trim() !== "");
@@ -134,42 +149,27 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
     }
 
     setRxSaving(true);
-    const owner = store.getUsers().find((u) => u.id === pet.owner_id);
-    const newRx = store.addPrescription({
-      pet_id: pet.id,
-      pet_name: pet.name,
-      pet_species: speciesMeta.ar,
-      pet_breed: pet.breed || null,
-      owner_id: pet.owner_id,
-      owner_name: owner?.full_name || "مربي الحيوان",
-      owner_phone: owner?.phone || "01012345678",
-      veterinarian_id: vetId,
-      veterinarian_name: "د. يوسف الشناوي",
-      veterinarian_license: "EGY-VET-48920",
-      clinic_name: "مستشفى النيل البيطري التخصصي",
-      clinic_phone: "0227508900",
-      clinic_address: "شارع التسعين الشمالي، التجمع الخامس، القاهرة الجديدة",
+    const rxNumber = `VB-${crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
+    const qrCode = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/verify/rx/${rxNumber}`;
+    const newItems = validItems.map((it) => ({ id: crypto.randomUUID(), ...it }));
+    const { data: row, error } = await createClient().from("prescriptions").insert({
+      pet_id: pet.id, owner_id: pet.owner_id, veterinarian_id: vetId,
+      rx_number: rxNumber, qr_verification_code: qrCode,
       diagnosis: rxDiagnosis,
       clinical_notes: rxNotes || null,
       issue_date: new Date().toISOString().split("T")[0],
       valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      items: validItems.map((it) => ({
-        id: `rxi-${Math.random().toString(36).substring(2, 7)}`,
-        ...it,
-      })),
+      items: newItems,
       status: "active",
-    });
-
-    setTimeout(() => {
-      setPrescriptions(store.getPrescriptionsByPet(pet.id));
-      setRxSaving(false);
-      setShowCreateRxModal(false);
-      setRxDiagnosis("");
-      setRxNotes("");
-      setRxItems([{ medication_name: "", dosage: "", frequency: "كل 12 ساعة", duration: "7 أيام", instructions: "" }]);
-      setSelectedRx(newRx);
-      setShowRxModal(true);
-    }, 400);
+    }).select("*").single();
+    setRxSaving(false);
+    if (error || !row) { window.alert(error?.message || "تعذر إنشاء الروشتة"); return; }
+    const newRx = { ...row, pet_name: pet.name, pet_species: speciesMeta.ar, pet_breed: pet.breed,
+      owner_name: "مربي الحيوان", owner_phone: "", veterinarian_name: vet?.profile?.full_name || "الطبيب المعالج",
+      veterinarian_license: vet?.license_number || "", clinic_name: vet?.clinic_affiliation_name || "", items: newItems } as Prescription;
+    setPrescriptions((items) => [newRx, ...items]); setShowCreateRxModal(false);
+    setRxDiagnosis(""); setRxNotes(""); setRxItems([{ medication_name: "", dosage: "", frequency: "كل 12 ساعة", duration: "7 أيام", instructions: "" }]);
+    setSelectedRx(newRx); setShowRxModal(true);
   };
 
   return (
@@ -591,11 +591,15 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
         isOpen={showRxModal}
         onClose={() => setShowRxModal(false)}
         prescription={selectedRx}
-        onToggleDispensed={(id) => {
-          store.togglePrescriptionDispensed(id);
-          const updated = store.getPrescriptionsByPet(pet.id);
+        onToggleDispensed={async (id) => {
+          const current = prescriptions.find((item) => item.id === id);
+          if (!current) return;
+          const status = current.status === "dispensed" ? "active" : "dispensed";
+          const { data, error } = await createClient().from("prescriptions").update({ status, dispensed_at: status === "dispensed" ? new Date().toISOString() : null }).eq("id", id).eq("veterinarian_id", vetId).select("*").single();
+          if (error || !data) { window.alert(error?.message || "تعذر تحديث حالة الصرف"); return; }
+          const updated = prescriptions.map((item) => item.id === id ? { ...item, ...data } as Prescription : item);
           setPrescriptions(updated);
-          const found = updated.find((p) => p.id === id);
+          const found = updated.find((item) => item.id === id);
           if (found) setSelectedRx(found);
         }}
       />

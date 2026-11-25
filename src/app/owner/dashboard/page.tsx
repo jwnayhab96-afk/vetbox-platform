@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
 import { PetCard } from "@/components/pet/pet-card";
@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
 import {
   FadeIn,
@@ -36,23 +36,54 @@ import {
 } from "lucide-react";
 
 export default function OwnerDashboardPage() {
-  const currentProfile = store.getCurrentProfile();
-  const [pets, setPets] = useState(() => store.getPets(currentProfile.id));
-  const [reminders, setReminders] = useState(() => store.getReminders(currentProfile.id));
+  const [currentProfile, setCurrentProfile] = useState<{ id: string; full_name: string } | null>(null);
+  const [pets, setPets] = useState<any[]>([]);
+  const [reminders, setReminders] = useState<any[]>([]);
+  const [visits, setVisits] = useState<any[]>([]);
+  const [links, setLinks] = useState<any[]>([]);
 
-  const allVisits = store.getPets(currentProfile.id).flatMap((p) => store.getVisitsByPet(p.id));
-  const connectedLinks = store.getPets(currentProfile.id).flatMap((p) => store.getLinksForPet(p.id));
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const [{ data: profile }, { data: petRows }, { data: reminderRows }, { data: visitRows }, { data: linkRows }] = await Promise.all([
+        supabase.from("profiles").select("id, full_name").eq("id", user.id).single(),
+        supabase.from("pets").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("reminders").select("*").eq("user_id", user.id).order("due_date"),
+        supabase.from("medical_visits").select("*, pets!inner(owner_id)").eq("pets.owner_id", user.id).order("visit_date", { ascending: false }),
+        supabase.from("pet_vet_links").select("*, pets!inner(owner_id)").eq("pets.owner_id", user.id),
+      ]);
+      if (!active) return;
+      if (profile) setCurrentProfile(profile);
+      setPets(petRows || []);
+      setReminders(reminderRows || []);
+      setVisits(visitRows || []);
+      setLinks(linkRows || []);
+    };
+    load().catch((error) => console.error("Unable to load owner dashboard", error));
+    return () => { active = false; };
+  }, []);
+
+  const allVisits = visits;
+  const connectedLinks = links;
   const activeReminders = reminders.filter((r) => !r.is_completed);
 
-  const handleToggleReminder = (id: string) => {
-    store.toggleReminder(id);
-    setReminders([...store.getReminders(currentProfile.id)]);
+  const handleToggleReminder = async (id: string) => {
+    const reminder = reminders.find((item) => item.id === id);
+    if (!reminder) return;
+    const isCompleted = !reminder.is_completed;
+    const supabase = createClient();
+    const { error } = await supabase.from("reminders").update({ is_completed: isCompleted, completed_at: isCompleted ? new Date().toISOString() : null }).eq("id", id);
+    if (error) return;
+    setReminders((items) => items.map((item) => item.id === id ? { ...item, is_completed: isCompleted } : item));
   };
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
       <Header
-        title={`أهلاً بك، ${currentProfile.full_name}`}
+        title={`أهلاً بك${currentProfile?.full_name ? `، ${currentProfile.full_name}` : ""}`}
         subtitle="لوحة المتابعة الصحية والرعاية اليومية لحيواناتك"
         role="owner"
         action={{
@@ -264,7 +295,7 @@ export default function OwnerDashboardPage() {
             <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerChildren={0.08}>
               {pets.map((pet) => {
                 const nextRem = reminders.find((r) => r.pet_id === pet.id && !r.is_completed);
-                const hasExam = store.getVisitsByPet(pet.id).some((v) => v.author_role === "veterinarian");
+                const hasExam = visits.some((visit) => visit.pet_id === pet.id && visit.author_role === "veterinarian");
                 return (
                   <StaggerItem key={pet.id}>
                     <PetCard pet={pet} nextReminder={nextRem} hasRecentExam={hasExam} />

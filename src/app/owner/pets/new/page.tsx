@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { SPECIES_LABELS, calculateAge } from "@/lib/utils";
 import { triggerConfetti, motion, AnimatePresence } from "@/components/ui/motion";
 import {
@@ -26,7 +26,7 @@ import {
 
 export default function AddPetPage() {
   const router = useRouter();
-  const currentProfile = store.getCurrentProfile();
+  const [ownerId, setOwnerId] = useState<string | null>(null);
 
   // Multi-step state: 1, 2, 3, 4
   const [step, setStep] = useState(1);
@@ -54,6 +54,13 @@ export default function AddPetPage() {
   // Species conditional attribute
   const [customAttribute, setCustomAttribute] = useState("");
 
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (user) setOwnerId(user.id);
+      else router.replace("/auth/login");
+    });
+  }, [router]);
+
   const handleNext = () => {
     if (step === 1 && !name.trim()) {
       alert("يرجى كتابة اسم الحيوان");
@@ -66,8 +73,9 @@ export default function AddPetPage() {
     setStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ownerId) { router.replace("/auth/login"); return; }
     setLoading(true);
 
     const speciesAttributes: Record<string, any> = {};
@@ -78,8 +86,9 @@ export default function AddPetPage() {
       else speciesAttributes.notes = customAttribute;
     }
 
-    const newPet = store.addPet({
-      owner_id: currentProfile.id,
+    const supabase = createClient();
+    const { data: newPet, error } = await supabase.from("pets").insert({
+      owner_id: ownerId,
       name,
       species,
       breed: breed || null,
@@ -96,14 +105,18 @@ export default function AddPetPage() {
       is_spayed_neutered: isSpayedNeutered,
       species_attributes: speciesAttributes,
       is_deceased: false,
-    });
+    }).select("id").single();
+
+    if (error || !newPet) {
+      setLoading(false);
+      window.alert(error?.message || "تعذر حفظ بيانات الحيوان.");
+      return;
+    }
 
     triggerConfetti();
 
-    setTimeout(() => {
-      setLoading(false);
-      router.push(`/owner/pets/${newPet.id}`);
-    }, 900);
+    setLoading(false);
+    router.push(`/owner/pets/${newPet.id}`);
   };
 
   return (

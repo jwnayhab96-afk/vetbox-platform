@@ -1,21 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
 import { ShieldCheck, CheckCircle2, XCircle, Search, Clock, Award } from "lucide-react";
 
 export default function AdminVeterinariansPage() {
-  const [vets, setVets] = useState(() => store.getVeterinarians());
+  const [vets, setVets] = useState<any[]>([]);
   const [filter, setFilter] = useState<"all" | "pending" | "verified" | "rejected">("all");
 
-  const handleStatusChange = (vetId: string, status: "verified" | "rejected") => {
-    store.updateVetVerification(vetId, status, status === "rejected" ? "تم رفض الاعتماد لعدم استيفاء الشروط" : undefined);
-    setVets([...store.getVeterinarians()]);
+  const loadVeterinarians = async () => {
+    const { data, error } = await createClient().from("veterinarian_profiles").select("*, profile:profiles(*)").order("created_at", { ascending: false });
+    if (error) { console.error("Unable to load veterinarian applications", error); return; }
+    setVets(data || []);
+  };
+  useEffect(() => { loadVeterinarians(); }, []);
+
+  const handleStatusChange = async (vetId: string, status: "verified" | "rejected") => {
+    const reason = status === "rejected" ? "تم رفض الاعتماد لعدم استيفاء الشروط" : null;
+    const { error } = await createClient().rpc("review_veterinarian", { target_vet_id: vetId, new_status: status, reason });
+    if (error) { window.alert(error.message); return; }
+    await loadVeterinarians();
   };
 
   const filtered = vets.filter((v) => {

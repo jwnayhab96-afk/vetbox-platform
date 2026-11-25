@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDateTime, formatArabicDate } from "@/lib/utils";
 import {
   Users,
@@ -23,19 +23,38 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
-  const users = store.getUsers();
-  const [vets, setVets] = useState(() => store.getVeterinarians());
-  const pets = store.getPets();
-  const clinics = store.getClinics();
-  const [auditLogs, setAuditLogs] = useState(() => store.getAuditLogs());
+  const [users, setUsers] = useState<any[]>([]);
+  const [vets, setVets] = useState<any[]>([]);
+  const [pets, setPets] = useState<any[]>([]);
+  const [clinics, setClinics] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+
+  const loadDashboard = async () => {
+    const supabase = createClient();
+    const [usersResult, vetsResult, petsResult, clinicsResult, logsResult] = await Promise.all([
+      supabase.from("profiles").select("*", { count: "exact" }),
+      supabase.from("veterinarian_profiles").select("*, profile:profiles(*)"),
+      supabase.from("pets").select("id, name, owner_id"),
+      supabase.from("clinics").select("*"),
+      supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(20),
+    ]);
+    if (usersResult.data) setUsers(usersResult.data);
+    if (vetsResult.data) setVets(vetsResult.data);
+    if (petsResult.data) setPets(petsResult.data);
+    if (clinicsResult.data) setClinics(clinicsResult.data);
+    if (logsResult.data) setAuditLogs(logsResult.data);
+  };
+  useEffect(() => { loadDashboard(); }, []);
 
   const pendingVets = vets.filter((v) => v.verification_status === "pending");
   const verifiedVets = vets.filter((v) => v.verification_status === "verified");
 
-  const handleVerifyVet = (vetId: string, status: "verified" | "rejected") => {
-    store.updateVetVerification(vetId, status, status === "rejected" ? "بيانات الترخيص غير مطابقة" : undefined);
-    setVets([...store.getVeterinarians()]);
-    setAuditLogs([...store.getAuditLogs()]);
+  const handleVerifyVet = async (vetId: string, status: "verified" | "rejected") => {
+    const { error } = await createClient().rpc("review_veterinarian", {
+      target_vet_id: vetId, new_status: status, reason: status === "rejected" ? "بيانات الترخيص غير مطابقة" : null,
+    });
+    if (error) { window.alert(error.message); return; }
+    await loadDashboard();
   };
 
   return (

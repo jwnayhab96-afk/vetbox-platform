@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
@@ -8,13 +8,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { BookOpen, Search, Clock, ShieldCheck, ArrowRight } from "lucide-react";
 
 export default function LearnPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const articles = store.getArticles();
+  const [articles, setArticles] = useState<any[]>([]);
+  useEffect(() => {
+    createClient().from("published_articles").select("*").order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) console.error("Unable to load articles", error);
+        else setArticles(data || []);
+      });
+  }, []);
 
   const filtered = articles.filter((art) => {
     const matchesSearch =
@@ -128,7 +135,7 @@ export default function LearnPage() {
 
                 <div className="p-6 pt-0 border-t border-border/60 mt-2 flex items-center justify-between">
                   <span className="text-[11px] text-muted-foreground">
-                    مراجعة: د. {art.reviewer?.profile?.full_name || "يوسف الشناوي"}
+                    مراجعة: {art.reviewer?.profile?.full_name || "غير محدد"}
                   </span>
                   <Link href={`/learn/${art.slug}`}>
                     <Button size="sm" variant="outline" className="text-xs">

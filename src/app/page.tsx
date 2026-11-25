@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/shared/navbar";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { SpeciesIcon } from "@/components/pet/species-icon";
 import {
   FadeIn,
@@ -48,9 +48,21 @@ export default function HomePage() {
   const router = useRouter();
   const [heroSearch, setHeroSearch] = useState("");
 
-  const clinics = store.getClinics().slice(0, 3);
-  const vets = store.getVeterinarians().slice(0, 2);
-  const articles = store.getArticles().slice(0, 3);
+  const [clinics, setClinics] = useState<any[]>([]);
+  const [vets, setVets] = useState<any[]>([]);
+  const [articles, setArticles] = useState<any[]>([]);
+  useEffect(() => {
+    const supabase = createClient();
+    Promise.all([
+      supabase.from("clinics").select("*").eq("is_verified", true).limit(3),
+      supabase.from("veterinarian_directory").select("*").limit(2),
+      supabase.from("published_articles").select("*").order("created_at", { ascending: false }).limit(3),
+    ]).then(([clinicResult, vetResult, articleResult]) => {
+      setClinics(clinicResult.data || []);
+      setVets(vetResult.data || []);
+      setArticles(articleResult.data || []);
+    });
+  }, []);
 
   const handleHeroSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,15 +255,15 @@ export default function HomePage() {
                       <div className="grid grid-cols-3 gap-2 text-center text-xs">
                         <div className="p-2.5 rounded-xl bg-card border border-border/80">
                           <span className="text-muted-foreground text-[10px] block">الحرارة الطبيعية</span>
-                          <strong className="text-foreground text-sm font-bold">38.6 °C</strong>
+                          <strong className="text-foreground text-sm font-bold">يُسجل بعد الكشف</strong>
                         </div>
                         <div className="p-2.5 rounded-xl bg-card border border-border/80">
                           <span className="text-muted-foreground text-[10px] block">نبض القلب</span>
-                          <strong className="text-foreground text-sm font-bold">92 BPM</strong>
+                          <strong className="text-foreground text-sm font-bold">يُسجل بعد الكشف</strong>
                         </div>
                         <div className="p-2.5 rounded-xl bg-card border border-border/80">
                           <span className="text-muted-foreground text-[10px] block">تغطية التطعيم</span>
-                          <strong className="text-emerald-600 text-sm font-bold">100% سارية</strong>
+                          <strong className="text-emerald-600 text-sm font-bold">تظهر بعد تسجيل التطعيمات</strong>
                         </div>
                       </div>
 
@@ -260,16 +272,16 @@ export default function HomePage() {
                         <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950">
                           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-bold block">تطعيم السعار السنوي (Nobivac Rabies)</span>
-                            <span className="text-[11px] text-emerald-800">تم في: مستشفى النيل • د. يوسف الشناوي</span>
+                            <span className="font-bold block">سجل التطعيمات الموثق</span>
+                            <span className="text-[11px] text-emerald-800">تظهر هنا بيانات التطعيمات التي يسجلها طبيبك</span>
                           </div>
                         </div>
 
                         <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-950">
                           <Clock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-bold block">تذكير تلقائي: وقاية القراد (NexGard)</span>
-                            <span className="text-[11px] text-amber-800">مستحق خلال 16 يوماً</span>
+                            <span className="font-bold block">مواعيد الرعاية والتذكيرات</span>
+                            <span className="text-[11px] text-amber-800">سجّل تذكيراتك لمتابعة الرعاية الوقائية</span>
                           </div>
                         </div>
                       </div>
@@ -515,7 +527,7 @@ export default function HomePage() {
                             <span>{clinic.address}</span>
                           </p>
                           <div className="flex flex-wrap gap-1.5 pt-1">
-                            {clinic.services.slice(0, 3).map((s, idx) => (
+                            {clinic.services.slice(0, 3).map((s: string, idx: number) => (
                               <span key={idx} className="text-[11px] bg-muted px-2.5 py-0.5 rounded-lg text-muted-foreground font-medium">
                                 {s}
                               </span>

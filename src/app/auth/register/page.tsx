@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Logo } from "@/components/shared/logo";
-import { User, Stethoscope, Mail, Phone, Lock, MapPin, Award } from "lucide-react";
-import { store } from "@/lib/data/store";
+import { User, Stethoscope, Mail, Phone, Lock, Award, AlertCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -21,20 +21,67 @@ export default function RegisterPage() {
   const [licenseNumber, setLicenseNumber] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleRegister = (e: React.FormEvent) => {
+  // Real Supabase Registration Handler
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
     setLoading(true);
 
-    setTimeout(() => {
-      // Set current role and navigate
-      store.setCurrentRole(role);
-      if (role === "owner") {
-        router.push("/owner/dashboard");
-      } else {
-        router.push("/veterinarian/verification");
+    if (password.length < 6) {
+      setErrorMessage("يجب أن تتكون كلمة المرور من 6 أحرف أو أرقام على الأقل.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+            phone: phone.trim(),
+            role: role,
+            governorate: governorate,
+            license_number: role === "veterinarian" ? licenseNumber.trim() : null,
+          },
+        },
+      });
+
+      if (error) {
+        if (error.message.includes("User already registered")) {
+          setErrorMessage("هذا البريد الإلكتروني مسجل بالفعل في منصة فيت بوكس. يرجى تسجيل الدخول بدلاً من ذلك.");
+        } else if (error.message.includes("Password should be at least")) {
+          setErrorMessage("كلمة المرور ضعيفة. يرجى استخدام 6 خانات على الأقل.");
+        } else {
+          setErrorMessage(error.message || "تعذر إتمام إنشاء الحساب. يرجى المحاولة مرة أخرى.");
+        }
+        setLoading(false);
+        return;
       }
-    }, 600);
+
+      if (data.user) {
+        if (!data.session) {
+          setSuccessMessage("تم إنشاء حسابك. افتح رسالة التأكيد في بريدك الإلكتروني، ثم سجّل الدخول.");
+          return;
+        }
+        if (role === "veterinarian") {
+          router.push("/veterinarian/verification");
+        } else {
+          router.push("/owner/dashboard");
+        }
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "حدث خطأ غير متوقع أثناء إنشاء الحساب.";
+      setErrorMessage(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,6 +97,18 @@ export default function RegisterPage() {
         <Card className="border-border shadow-sm">
           <form onSubmit={handleRegister}>
             <CardContent className="p-6 space-y-5">
+              {errorMessage && (
+                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-medium flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+              {successMessage && (
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs font-medium">
+                  {successMessage}
+                </div>
+              )}
+
               {/* Role Selection */}
               <div className="space-y-2 text-right">
                 <Label>نوع الحساب</Label>
@@ -65,7 +124,7 @@ export default function RegisterPage() {
                   >
                     <User className="h-6 w-6" />
                     <div>
-                      <span className="block text-sm">مربي حيوانات</span>
+                      <span className="block text-sm font-bold">مربي حيوانات</span>
                       <span className="text-[11px] text-muted-foreground font-normal">أليفة، خيول، أو مزارع</span>
                     </div>
                   </button>
@@ -81,7 +140,7 @@ export default function RegisterPage() {
                   >
                     <Stethoscope className="h-6 w-6" />
                     <div>
-                      <span className="block text-sm">طبيب بيطري</span>
+                      <span className="block text-sm font-bold">طبيب بيطري</span>
                       <span className="text-[11px] text-muted-foreground font-normal">مرخص ومسجل بالنقابة</span>
                     </div>
                   </button>
@@ -178,7 +237,7 @@ export default function RegisterPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="8 أحرف على الأقل"
+                    placeholder="6 أحرف أو أرقام على الأقل"
                     icon={<Lock className="h-4 w-4" />}
                   />
                 </div>

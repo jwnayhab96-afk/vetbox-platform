@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
@@ -8,7 +8,7 @@ import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import {
   Stethoscope,
   ShieldCheck,
@@ -20,12 +20,34 @@ import {
 export default function VetDetailClient({ id: propId }: { id?: string }) {
   const params = useParams();
   const vetId = propId || (params?.id as string);
-  const vet = store.getVeterinarianById(vetId);
-  const currentProfile = store.getCurrentProfile();
-  const userPets = store.getPets(currentProfile.id);
+  const [vet, setVet] = useState<any>(null);
+  const [currentProfile, setCurrentProfile] = useState<any>(null);
+  const [userPets, setUserPets] = useState<any[]>([]);
 
   const [selectedPet, setSelectedPet] = useState("");
   const [requested, setRequested] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      const supabase = createClient();
+      const [{ data: vetData }, { data: { user } }] = await Promise.all([
+        supabase.from("veterinarian_directory").select("*").eq("id", vetId).single(),
+        supabase.auth.getUser(),
+      ]);
+      if (!active) return;
+      setVet(vetData);
+      if (user) {
+        const [{ data: profile }, { data: pets }] = await Promise.all([
+          supabase.from("profiles").select("*").eq("id", user.id).single(),
+          supabase.from("pets").select("id, name, species, breed").eq("owner_id", user.id).order("name"),
+        ]);
+        if (active) { setCurrentProfile(profile); setUserPets(pets || []); }
+      }
+    };
+    load();
+    return () => { active = false; };
+  }, [vetId]);
 
   if (!vet) {
     return (
@@ -42,10 +64,18 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
     );
   }
 
-  const handleConnect = (e: React.FormEvent) => {
+  const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPet) return;
-    store.createConnectionRequest(selectedPet, vet.id, currentProfile.id);
+    if (!selectedPet || !currentProfile) { window.location.assign("/auth/login"); return; }
+    const supabase = createClient();
+    const { error } = await supabase.from("pet_vet_links").insert({
+      pet_id: selectedPet,
+      vet_id: vet.id,
+      requested_by: currentProfile.id,
+      status: "pending",
+      permission_scope: "full_clinical_access",
+    });
+    if (error) { window.alert(error.message); return; }
     setRequested(true);
   };
 

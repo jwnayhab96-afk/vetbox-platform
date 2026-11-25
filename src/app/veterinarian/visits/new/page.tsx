@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { VISIT_TYPE_LABELS, SPECIES_LABELS } from "@/lib/utils";
 import { triggerConfetti } from "@/components/ui/motion";
 import {
@@ -33,8 +33,8 @@ function ClinicalVisitForm() {
   const searchParams = useSearchParams();
   const defaultPetId = searchParams.get("petId") || "";
 
-  const vetId = "33333333-3333-3333-3333-333333333333";
-  const authorizedLinks = store.getLinksForVet(vetId).filter((l) => l.status === "accepted");
+  const [vetId, setVetId] = useState("");
+  const [authorizedLinks, setAuthorizedLinks] = useState<any[]>([]);
 
   // Form states
   const [petId, setPetId] = useState(defaultPetId);
@@ -57,18 +57,35 @@ function ClinicalVisitForm() {
 
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.replace("/auth/login"); return; }
+      setVetId(user.id);
+      const { data, error } = await supabase.from("pet_vet_links")
+        .select("*, pet:pets(*)").eq("vet_id", user.id).eq("status", "accepted");
+      if (!error) setAuthorizedLinks(data || []);
+    };
+    load();
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!petId || !visitReason) {
       alert("يرجى اختيار المريض وتحديد سبب الكشف");
       return;
     }
 
+    if (!vetId || !authorizedLinks.some((link) => link.pet_id === petId)) {
+      alert("لا تملك صلاحية تسجيل كشف لهذا الحيوان.");
+      return;
+    }
     setLoading(true);
-    const newVisit = store.addMedicalVisit({
+    const supabase = createClient();
+    const { error } = await supabase.from("medical_visits").insert({
       pet_id: petId,
       vet_id: vetId,
-      clinic_id: "a0000000-0000-0000-0000-000000000001",
       created_by: vetId,
       author_role: "veterinarian",
       visit_date: new Date(visitDate).toISOString(),
@@ -87,12 +104,16 @@ function ClinicalVisitForm() {
       status: "finalized",
     });
 
+    if (error) {
+      setLoading(false);
+      alert(error.message);
+      return;
+    }
+
     triggerConfetti();
 
-    setTimeout(() => {
-      setLoading(false);
-      router.push(`/veterinarian/patients/${petId}`);
-    }, 700);
+    setLoading(false);
+    router.push(`/veterinarian/patients/${petId}`);
   };
 
   return (

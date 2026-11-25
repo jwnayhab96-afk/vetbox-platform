@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate, REMINDER_TYPE_LABELS } from "@/lib/utils";
 import {
   getGoogleCalendarUrl,
@@ -30,8 +30,8 @@ import {
 import { triggerConfetti } from "@/components/ui/motion";
 
 export default function RemindersPage() {
-  const currentProfile = store.getCurrentProfile();
-  const [reminders, setReminders] = useState(() => store.getReminders(currentProfile.id));
+  const [userId, setUserId] = useState("");
+  const [reminders, setReminders] = useState<any[]>([]);
   const [filter, setFilter] = useState<"all" | "active" | "completed">("active");
   const [showAdd, setShowAdd] = useState(false);
 
@@ -41,28 +41,47 @@ export default function RemindersPage() {
   const [petId, setPetId] = useState("");
   const [reminderType, setReminderType] = useState<any>("vaccination");
 
-  const pets = store.getPets(currentProfile.id);
+  const [pets, setPets] = useState<any[]>([]);
 
-  const handleToggle = (id: string) => {
-    store.toggleReminder(id);
-    setReminders([...store.getReminders(currentProfile.id)]);
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.assign("/auth/login"); return; }
+      setUserId(user.id);
+      const [{ data: reminderRows }, { data: petRows }] = await Promise.all([
+        supabase.from("reminders").select("*, pet:pets(name)").eq("user_id", user.id).order("due_date"),
+        supabase.from("pets").select("id, name").eq("owner_id", user.id).order("name"),
+      ]);
+      setReminders((reminderRows || []).map((item: any) => ({ ...item, pet_name: item.pet?.name })));
+      setPets(petRows || []);
+    };
+    load();
+  }, []);
+
+  const handleToggle = async (id: string) => {
+    const reminder = reminders.find((item) => item.id === id);
+    if (!reminder) return;
+    const isCompleted = !reminder.is_completed;
+    const { error } = await createClient().from("reminders").update({ is_completed: isCompleted, completed_at: isCompleted ? new Date().toISOString() : null }).eq("id", id).eq("user_id", userId);
+    if (error) { window.alert(error.message); return; }
+    setReminders((items) => items.map((item) => item.id === id ? { ...item, is_completed: isCompleted } : item));
   };
 
-  const handleAddReminder = (e: React.FormEvent) => {
+  const handleAddReminder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !dueDate || !petId) return;
 
-    const selectedPet = pets.find((p) => p.id === petId);
-    store.addReminder({
-      user_id: currentProfile.id,
+    const { data, error } = await createClient().from("reminders").insert({
+      user_id: userId,
       pet_id: petId,
-      pet_name: selectedPet?.name,
       reminder_type: reminderType,
       title,
       due_date: dueDate,
-    });
+    }).select("*, pet:pets(name)").single();
+    if (error || !data) { window.alert(error?.message || "تعذر إنشاء التذكير"); return; }
 
-    setReminders([...store.getReminders(currentProfile.id)]);
+    setReminders((items) => [...items, { ...data, pet_name: data.pet?.name }]);
     setShowAdd(false);
     setTitle("");
     setDueDate("");

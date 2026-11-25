@@ -381,12 +381,16 @@ $$ LANGUAGE sql STABLE SECURITY DEFINER;
 -- Profiles: Public read, own profile edit
 CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles
     FOR SELECT USING (true);
+CREATE POLICY "Users can insert own profile" ON public.profiles
+    FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON public.profiles
     FOR UPDATE USING (auth.uid() = id);
 
 -- Veterinarian Profiles: Viewable by all, editable by owner vet or admin
 CREATE POLICY "Vet profiles are viewable by all" ON public.veterinarian_profiles
     FOR SELECT USING (true);
+CREATE POLICY "Vets can insert own profile" ON public.veterinarian_profiles
+    FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Vets can edit own profile" ON public.veterinarian_profiles
     FOR UPDATE USING (auth.uid() = id);
 
@@ -492,4 +496,48 @@ GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authenticated, service_role;
+
+-- 12. AUTOMATIC PROFILE CREATION TRIGGER ON SIGNUP
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+    user_full_name TEXT;
+    user_role_val user_role;
+    user_phone TEXT;
+    user_gov TEXT;
+    user_license TEXT;
+BEGIN
+    user_full_name := COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1));
+    user_phone := NEW.raw_user_meta_data->>'phone';
+    user_gov := COALESCE(NEW.raw_user_meta_data->>'governorate', 'Cairo');
+    
+    BEGIN
+        user_role_val := (NEW.raw_user_meta_data->>'role')::user_role;
+    EXCEPTION WHEN OTHERS THEN
+        user_role_val := 'owner'::user_role;
+    END;
+
+    INSERT INTO public.profiles (id, full_name, role, phone, governorate)
+    VALUES (NEW.id, user_full_name, user_role_val, user_phone, user_gov)
+    ON CONFLICT (id) DO UPDATE
+    SET full_name = EXCLUDED.full_name,
+        role = EXCLUDED.role,
+        phone = COALESCE(EXCLUDED.phone, public.profiles.phone);
+
+    IF user_role_val = 'veterinarian' THEN
+        user_license := NEW.raw_user_meta_data->>'license_number';
+        INSERT INTO public.veterinarian_profiles (id, license_number, verification_status)
+        VALUES (NEW.id, user_license, 'pending')
+        ON CONFLICT (id) DO NOTHING;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 

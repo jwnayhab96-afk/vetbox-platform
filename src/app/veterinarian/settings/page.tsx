@@ -1,27 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { Check } from "lucide-react";
 
 export default function VetSettingsPage() {
-  const vetId = "33333333-3333-3333-3333-333333333333";
-  const vet = store.getVeterinarianById(vetId) || store.getVeterinarians()[0];
-  const profile = vet.profile || store.getCurrentProfile();
-
-  const [name, setName] = useState(profile.full_name);
-  const [phone, setPhone] = useState(profile.phone || "");
+  const [userId, setUserId] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [saved, setSaved] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.assign("/auth/login"); return; }
+      setUserId(user.id);
+      const { data } = await supabase.from("profiles").select("full_name, phone").eq("id", user.id).single();
+      if (data) { setName(data.full_name || ""); setPhone(data.phone || ""); }
+    };
+    load();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    profile.full_name = name;
-    profile.phone = phone;
+    const { error } = await createClient().from("profiles").update({ full_name: name, phone, updated_at: new Date().toISOString() }).eq("id", userId);
+    if (error) { window.alert(error.message); return; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

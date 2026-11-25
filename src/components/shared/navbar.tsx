@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { createClient } from "@/lib/supabase/client";
 import {
   Menu,
   X,
@@ -18,11 +19,36 @@ import {
   PhoneCall,
   Clock,
   Sparkles,
+  LogOut,
 } from "lucide-react";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authUser, setAuthUser] = useState<any>(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        setAuthUser(user);
+      } catch {
+        // Fallback to guest
+      }
+    }
+    checkAuth();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      setAuthUser(null);
+    } catch {
+      // Ignored
+    }
+  };
 
   const navLinks = [
     { href: "/clinics", label: "العيادات والمستشفيات", icon: MapPin },

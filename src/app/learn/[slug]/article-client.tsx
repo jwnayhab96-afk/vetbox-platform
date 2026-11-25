@@ -1,13 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import {
   Clock,
   ShieldCheck,
@@ -19,7 +19,11 @@ import {
 export default function ArticleDetailClient({ slug: propSlug }: { slug?: string }) {
   const params = useParams();
   const slug = propSlug || (params?.slug as string);
-  const article = store.getArticleBySlug(slug);
+  const [article, setArticle] = useState<any>(null);
+  useEffect(() => {
+    createClient().from("published_articles").select("*").eq("slug", slug).single()
+      .then(({ data }) => setArticle(data));
+  }, [slug]);
 
   if (!article) {
     return (
@@ -77,7 +81,7 @@ export default function ArticleDetailClient({ slug: propSlug }: { slug?: string 
                 </div>
                 <div>
                   <span className="text-xs text-muted-foreground block">مراجعة وتدقيق طبي بيطري:</span>
-                  <strong className="text-sm text-foreground">د. {article.reviewer?.profile?.full_name || "يوسف الشناوي"}</strong>
+                  <strong className="text-sm text-foreground">{article.reviewer?.profile?.full_name || "غير محدد"}</strong>
                   <span className="text-xs text-muted-foreground mr-1.5">(استشاري جراحة وطب حيوانات أليفة)</span>
                 </div>
               </div>
@@ -113,7 +117,7 @@ export default function ArticleDetailClient({ slug: propSlug }: { slug?: string 
               <div className="p-5 rounded-2xl bg-card border border-border mt-6 space-y-2 text-right">
                 <h4 className="font-bold text-sm text-foreground">المراجع العلمية والبروتوكولات المعتمدة:</h4>
                 <ul className="space-y-1.5 text-xs text-muted-foreground">
-                  {article.references_list.map((ref, idx) => (
+                  {article.references_list.map((ref: { title: string; url?: string; year?: string }, idx: number) => (
                     <li key={idx} className="flex items-center gap-2">
                       <span>•</span>
                       <span>{ref.title} {ref.year && `(${ref.year})`}</span>

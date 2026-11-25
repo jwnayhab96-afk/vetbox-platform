@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
@@ -19,7 +19,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { calculateAge, formatArabicDate, SPECIES_LABELS } from "@/lib/utils";
 import { HolographicCard, triggerConfetti, FadeIn, motion, AnimatePresence } from "@/components/ui/motion";
 import {
@@ -48,15 +48,43 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
   const params = useParams();
   const router = useRouter();
   const petId = propId || (params?.id as string);
-  const currentProfile = store.getCurrentProfile();
+  const [currentProfile, setCurrentProfile] = useState<any>(null);
+  const [pet, setPet] = useState<any>(null);
+  const [visits, setVisits] = useState<any[]>([]);
+  const [vaccinations, setVaccinations] = useState<any[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [medications, setMedications] = useState<any[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [links, setLinks] = useState<any[]>([]);
+  const [allVets, setAllVets] = useState<any[]>([]);
 
-  const [pet, setPet] = useState(() => store.getPetById(petId));
-  const [visits, setVisits] = useState(() => store.getVisitsByPet(petId));
-  const [vaccinations, setVaccinations] = useState(() => store.getVaccinationsByPet(petId));
-  const [plans, setPlans] = useState(() => store.getVaccinationPlansByPet(petId));
-  const [medications, setMedications] = useState(() => store.getMedicationsByPet(petId));
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>(() => store.getPrescriptionsByPet(petId));
-  const [links, setLinks] = useState(() => store.getLinksForPet(petId));
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.replace("/auth/login"); return; }
+      const [profileResult, petResult, visitsResult, vaccinationsResult, plansResult, medsResult, rxResult, linksResult, vetsResult] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        supabase.from("pets").select("*").eq("id", petId).single(),
+        supabase.from("medical_visits").select("*").eq("pet_id", petId).order("visit_date", { ascending: false }),
+        supabase.from("vaccination_records").select("*").eq("pet_id", petId).order("administration_date", { ascending: false }),
+        supabase.from("vaccination_plans").select("*").eq("pet_id", petId).order("recommended_date"),
+        supabase.from("medications").select("*").eq("pet_id", petId).order("created_at", { ascending: false }),
+        supabase.from("prescriptions").select("*").eq("pet_id", petId).order("created_at", { ascending: false }),
+        supabase.from("pet_vet_links").select("*, vet:veterinarian_profiles(*, profile:profiles(*))").eq("pet_id", petId),
+        supabase.from("veterinarian_directory").select("*"),
+      ]);
+      if (!active) return;
+      if (profileResult.data) setCurrentProfile(profileResult.data);
+      if (petResult.data) setPet(petResult.data);
+      setVisits(visitsResult.data || []); setVaccinations(vaccinationsResult.data || []);
+      setPlans(plansResult.data || []); setMedications(medsResult.data || []);
+      setPrescriptions(rxResult.data || []); setLinks(linksResult.data || []); setAllVets(vetsResult.data || []);
+    };
+    load().catch((error) => console.error("Unable to load pet medical record", error));
+    return () => { active = false; };
+  }, [petId, router]);
 
   // Modal states
   const [showAddNote, setShowAddNote] = useState(false);
@@ -78,15 +106,16 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
     setShowRxModal(true);
   };
 
-  const handleToggleRxDispensed = (id: string) => {
-    store.togglePrescriptionDispensed(id);
-    const updated = store.getPrescriptionsByPet(petId);
+  const handleToggleRxDispensed = async (id: string) => {
+    const rx = prescriptions.find((item) => item.id === id);
+    if (!rx) return;
+    const { error } = await createClient().from("prescriptions").update({ status: rx.status === "dispensed" ? "active" : "dispensed", dispensed_at: rx.status === "dispensed" ? null : new Date().toISOString() }).eq("id", id);
+    if (error) { window.alert("تسجيل الصرف متاح للطبيب أو الصيدلية فقط."); return; }
+    const updated = prescriptions.map((item) => item.id === id ? { ...item, status: rx.status === "dispensed" ? "active" : "dispensed" } as Prescription : item);
     setPrescriptions(updated);
-    const found = updated.find((p) => p.id === id);
+    const found = updated.find((item) => item.id === id);
     if (found) setSelectedPrescription(found);
   };
-
-  const allVets = store.getVeterinarians();
 
   if (!pet) {
     return (
@@ -104,12 +133,12 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
   const ageDisplay = calculateAge(pet.birth_date, pet.estimated_age_months);
   const hasRecentExam = visits.some((v) => v.author_role === "veterinarian");
 
-  const handleSaveOwnerNote = (e: React.FormEvent) => {
+  const handleSaveOwnerNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!noteTitle || !noteContent) return;
 
     setNoteSaving(true);
-    store.addMedicalVisit({
+    const { data, error } = await createClient().from("medical_visits").insert({
       pet_id: pet.id,
       created_by: currentProfile.id,
       author_role: "owner",
@@ -119,33 +148,25 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
       presenting_complaints: noteContent,
       is_verified_diagnosis: false,
       status: "finalized",
-    });
-
-    setTimeout(() => {
-      setVisits(store.getVisitsByPet(pet.id));
-      setNoteSaving(false);
-      setShowAddNote(false);
-      setNoteTitle("");
-      setNoteContent("");
-      triggerConfetti();
-    }, 400);
+    }).select("*").single();
+    setNoteSaving(false);
+    if (error || !data) { window.alert(error?.message || "تعذر حفظ الملاحظة"); return; }
+    setVisits((items) => [data, ...items]);
+    setShowAddNote(false); setNoteTitle(""); setNoteContent(""); triggerConfetti();
   };
 
-  const handleSendLinkRequest = (e: React.FormEvent) => {
+  const handleSendLinkRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedVetId) return;
 
     setLinkSaving(true);
-    store.createConnectionRequest(pet.id, selectedVetId, currentProfile.id, linkNotes);
-
-    setTimeout(() => {
-      setLinks(store.getLinksForPet(pet.id));
-      setLinkSaving(false);
-      setShowLinkModal(false);
-      setSelectedVetId("");
-      setLinkNotes("");
-      triggerConfetti();
-    }, 400);
+    const { data, error } = await createClient().from("pet_vet_links").insert({
+      pet_id: pet.id, vet_id: selectedVetId, requested_by: currentProfile.id,
+      permission_scope: "full_clinical_access", notes: linkNotes || null, status: "pending",
+    }).select("*, vet:veterinarian_profiles(*, profile:profiles(*))").single();
+    setLinkSaving(false);
+    if (error || !data) { window.alert(error?.message || "تعذر إرسال طلب الربط"); return; }
+    setLinks((items) => [...items, data]); setShowLinkModal(false); setSelectedVetId(""); setLinkNotes(""); triggerConfetti();
   };
 
   const handlePrint = () => {
@@ -389,7 +410,7 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
           <WeightGrowthChart
             pet={pet}
             visits={visits}
-            onWeightUpdated={(w) => setPet((prev) => (prev ? { ...prev, weight_kg: w } : undefined))}
+            onWeightUpdated={(w) => setPet((prev: any) => (prev ? { ...prev, weight_kg: w } : undefined))}
           />
         </div>
 

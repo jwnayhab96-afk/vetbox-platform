@@ -1,17 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "@/components/shared/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
 import { Users, Search, Shield, User, Stethoscope } from "lucide-react";
 
 export default function AdminUsersPage() {
-  const users = store.getUsers();
+  const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  useEffect(() => {
+    createClient().from("profiles").select("*").order("created_at", { ascending: false })
+      .then(({ data, error }) => { if (error) console.error(error); else setUsers(data || []); });
+  }, []);
 
   const filtered = users.filter((u) => {
     return (

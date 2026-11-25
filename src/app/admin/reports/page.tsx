@@ -1,14 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "@/components/shared/header";
 import { Card } from "@/components/ui/card";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDateTime } from "@/lib/utils";
 import { Activity, Shield } from "lucide-react";
 
 export default function AdminReportsPage() {
-  const auditLogs = store.getAuditLogs();
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  useEffect(() => {
+    createClient().from("audit_logs").select("*").order("created_at", { ascending: false }).limit(500)
+      .then(({ data, error }) => { if (error) console.error(error); else setAuditLogs(data || []); });
+  }, []);
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">

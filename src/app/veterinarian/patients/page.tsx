@@ -1,20 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { SPECIES_LABELS, calculateAge } from "@/lib/utils";
 import { Users, Search, Plus, Stethoscope, ChevronLeft, Calendar } from "lucide-react";
 
 export default function VetPatientsPage() {
-  const vetId = "33333333-3333-3333-3333-333333333333";
-  const links = store.getLinksForVet(vetId).filter((l) => l.status === "accepted");
+  const [links, setLinks] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.assign("/auth/login"); return; }
+      const { data, error } = await supabase.from("pet_vet_links").select("*, pet:pets(*)").eq("vet_id", user.id).eq("status", "accepted");
+      if (!error) setLinks(data || []);
+    };
+    load();
+  }, []);
 
   const filteredLinks = links.filter((l) => {
     if (!l.pet) return false;

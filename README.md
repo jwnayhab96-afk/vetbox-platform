@@ -112,20 +112,27 @@
    ```bash
    cp .env.example .env.local
    ```
-   *(ملاحظة: المنصة مهيأة أيضاً لتعمل بكفاءة تجريبية وتفاعلية كاملة مباشرة حتى قبل ربط مفاتيح Supabase).*
+   التطبيق يحتاج مشروع Supabase حقيقياً، ولا يوفر دخولاً تجريبياً أو حفظاً محلياً. لا تضف مفتاح Service Role إلى متغيرات `NEXT_PUBLIC_*` أو إلى كود المتصفح.
 
-3. **تشغيل الاختبارات الآلية (Run Tests):**
+3. **تجهيز قاعدة البيانات:**
+   ```bash
+   npx supabase link --project-ref <project-ref>
+   npx supabase db push
+   ```
+   يطبق ذلك ملفات `supabase/migrations`، ومنها ترحيل تقوية الصلاحيات وإنشاء جدول الوصفات. ملف `supabase/seed.sql` يحتوي بيانات تدريبية خيالية؛ استخدمه في التطوير فقط ولا تشغله في الإنتاج. أنشئ حساب المدير وامنحه دور `admin` من لوحة Supabase عبر وصول إداري موثوق.
+
+4. **تشغيل الاختبارات الآلية (Run Tests):**
    ```bash
    npm test
    ```
 
-4. **بدء خادم التطوير (Start Dev Server):**
+5. **بدء خادم التطوير (Start Dev Server):**
    ```bash
    npm run dev
    ```
    افتح المتصفح على: `http://localhost:3000`
 
-5. **بناء الإنتاج (Production Build):**
+6. **بناء الإنتاج (Production Build):**
    ```bash
    npm run build
    npm run start

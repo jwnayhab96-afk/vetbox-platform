@@ -6,36 +6,72 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Logo } from "@/components/shared/logo";
-import { Lock, Mail, Sparkles, User, Stethoscope, ShieldCheck } from "lucide-react";
-import { store } from "@/lib/data/store";
+import { Lock, Mail, AlertCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("ahmed@vetbox.eg");
-  const [password, setPassword] = useState("••••••••");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Real Supabase Login Handler
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     setLoading(true);
-    setTimeout(() => {
-      // Default to owner dashboard
-      store.setCurrentRole("owner");
-      router.push("/owner/dashboard");
-    }, 600);
-  };
 
-  const handleDemoLogin = (role: "owner" | "veterinarian" | "admin") => {
-    setLoading(true);
-    store.setCurrentRole(role);
-    if (role === "owner") {
-      router.push("/owner/dashboard");
-    } else if (role === "veterinarian") {
-      router.push("/veterinarian/dashboard");
-    } else {
-      router.push("/admin/dashboard");
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password,
+      });
+
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          setErrorMessage("البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى التأكد وإعادة المحاولة.");
+        } else if (error.message.includes("Email not confirmed")) {
+          setErrorMessage("لم يتم تأكيد بريدك الإلكتروني بعد. يرجى مراجعة صندوق الوارد في بريدك.");
+        } else {
+          setErrorMessage(error.message || "تعذر تسجيل الدخول. يرجى التحقق من الاتصال بالإنترنت.");
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        // Fetch user profile from Supabase
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.user.id)
+          .single();
+
+        if (profileError || !profile) {
+          setErrorMessage("تم تسجيل الدخول، لكن لم يتم العثور على ملف الحساب. تواصل مع الدعم لإصلاح إعداد الحساب.");
+          await supabase.auth.signOut();
+          return;
+        }
+
+        const role = profile.role;
+
+        if (role === "admin") {
+          router.push("/admin/dashboard");
+        } else if (role === "veterinarian") {
+          router.push("/veterinarian/dashboard");
+        } else {
+          router.push("/owner/dashboard");
+        }
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "حدث خطأ غير متوقع أثناء تسجيل الدخول.";
+      setErrorMessage(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,52 +85,17 @@ export default function LoginPage() {
           <p className="text-xs text-muted-foreground">تابع السجلات الطبية لحيواناتك وتواصل مع طبيبك البيطري</p>
         </div>
 
-        {/* Demo One-Click Access Banner */}
-        <div className="p-4 rounded-2xl bg-muted/60 border border-border/80 space-y-2.5 text-right">
-          <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              دخول تجريبي فوري (بدون كلمة سر):
-            </span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleDemoLogin("owner")}
-              className="text-xs flex items-center gap-1 py-1.5 h-auto bg-card hover:border-primary"
-            >
-              <User className="h-3.5 w-3.5 text-primary" />
-              حساب مربي
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleDemoLogin("veterinarian")}
-              className="text-xs flex items-center gap-1 py-1.5 h-auto bg-card hover:border-secondary"
-            >
-              <Stethoscope className="h-3.5 w-3.5 text-secondary" />
-              طبيب بيطري
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleDemoLogin("admin")}
-              className="text-xs flex items-center gap-1 py-1.5 h-auto bg-card hover:border-amber-500"
-            >
-              <ShieldCheck className="h-3.5 w-3.5 text-amber-600" />
-              مشرف النظام
-            </Button>
-          </div>
-        </div>
-
         {/* Standard Form */}
         <Card className="border-border shadow-sm">
           <form onSubmit={handleLogin}>
             <CardContent className="p-6 space-y-4">
+              {errorMessage && (
+                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-medium flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
               <div className="space-y-1.5 text-right">
                 <Label htmlFor="email">البريد الإلكتروني</Label>
                 <Input
@@ -123,6 +124,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
                   icon={<Lock className="h-4 w-4" />}
                 />
               </div>

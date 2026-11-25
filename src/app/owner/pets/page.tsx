@@ -1,20 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
 import { PetCard } from "@/components/pet/pet-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { PawPrint, Plus, Search, Filter } from "lucide-react";
 
 export default function OwnerPetsPage() {
-  const currentProfile = store.getCurrentProfile();
-  const [pets, setPets] = useState(() => store.getPets(currentProfile.id));
+  const [pets, setPets] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [speciesFilter, setSpeciesFilter] = useState("all");
+
+  useEffect(() => {
+    let active = true;
+    const loadPets = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.assign("/auth/login"); return; }
+      const { data, error } = await supabase.from("pets").select("*").eq("owner_id", user.id).order("created_at", { ascending: false });
+      if (error) { console.error("Unable to load pets", error); return; }
+      if (active) setPets(data || []);
+    };
+    loadPets();
+    return () => { active = false; };
+  }, []);
 
   const filteredPets = pets.filter((pet) => {
     const matchesSearch =

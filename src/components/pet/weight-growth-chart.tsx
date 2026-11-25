@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pet, MedicalVisit } from "@/lib/types/database.types";
 import { formatArabicDate } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { Scale, TrendingUp, Plus, Check, Info, Calendar } from "lucide-react";
 
 interface WeightGrowthChartProps {
@@ -25,6 +25,12 @@ export function WeightGrowthChart({
   const [showAddWeight, setShowAddWeight] = useState(false);
   const [newWeight, setNewWeight] = useState<string>("");
   const [activePoint, setActivePoint] = useState<number | null>(null);
+  const [weightEntries, setWeightEntries] = useState<any[]>([]);
+
+  useEffect(() => {
+    createClient().from("medical_entries").select("*").eq("pet_id", pet.id).eq("entry_type", "weight_log").order("event_date")
+      .then(({ data, error }) => { if (!error) setWeightEntries(data || []); });
+  }, [pet.id]);
 
   // Synthesize historical weights timeline (combining initial, past visits, and current)
   // Base healthy weight range based on species
@@ -38,36 +44,34 @@ export function WeightGrowthChart({
   const currentRange = breedRanges[pet.species] || { min: 10, max: 25, label: "المدى الطبيعي للسلالة" };
 
   // Data points
-  const points = [
-    {
-      date: "2024-01-16",
-      weight: (pet.weight_kg ? pet.weight_kg - 3.2 : 29.3).toFixed(1),
-      notes: "أول فحص وتسجيل بالمنصة",
-      author: "المربي",
-    },
-    {
-      date: "2024-06-10",
-      weight: (pet.weight_kg ? pet.weight_kg - 1.5 : 31.0).toFixed(1),
-      notes: "كشف دوري وتطعيم نصفي",
-      author: "د. يوسف الشناوي",
-    },
-    {
-      date: pet.weight_recorded_at || "2024-11-10",
-      weight: (pet.weight_kg || 32.5).toFixed(1),
-      notes: "آخر وزن مسجل سريرياً",
-      author: "العيادة البيطرية",
-    },
-  ];
+  const points = weightEntries.map((entry) => ({
+    date: entry.event_date,
+    weight: Number(entry.metadata?.weight_kg || 0).toFixed(1),
+    notes: entry.description,
+    author: entry.author_role === "veterinarian" ? "طبيب بيطري" : "المربي",
+  })).filter((entry) => Number(entry.weight) > 0);
+  if (pet.weight_kg && !points.some((point) => point.date === pet.weight_recorded_at)) {
+    points.push({ date: pet.weight_recorded_at || pet.created_at.slice(0, 10), weight: Number(pet.weight_kg).toFixed(1), notes: "الوزن الحالي المسجل", author: "المربي" });
+  }
 
-  const handleSaveWeight = (e: React.FormEvent) => {
+  const handleSaveWeight = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseFloat(newWeight);
     if (!val || isNaN(val) || val <= 0) return;
 
-    store.updatePet(pet.id, {
-      weight_kg: val,
-      weight_recorded_at: new Date().toISOString().split("T")[0],
-    });
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { window.location.assign("/auth/login"); return; }
+    const eventDate = new Date().toISOString().split("T")[0];
+    const { error: petError } = await supabase.from("pets").update({ weight_kg: val, weight_recorded_at: eventDate }).eq("id", pet.id).eq("owner_id", user.id);
+    if (petError) { window.alert(petError.message); return; }
+    const { data: entry, error: entryError } = await supabase.from("medical_entries").insert({
+      pet_id: pet.id, created_by: user.id, author_role: "owner", entry_type: "weight_log",
+      title: "تسجيل الوزن", description: `تم تسجيل وزن ${val} كجم`, event_date: eventDate,
+      metadata: { weight_kg: val },
+    }).select("*").single();
+    if (entryError) { window.alert(entryError.message); return; }
+    if (entry) setWeightEntries((items) => [...items, entry]);
 
     if (onWeightUpdated) onWeightUpdated(val);
     setShowAddWeight(false);
@@ -85,7 +89,7 @@ export function WeightGrowthChart({
   const maxW = Math.max(...weights, currentRange.max) + 2;
 
   const getX = (idx: number) =>
-    paddingX + (idx / (points.length - 1)) * (width - paddingX * 2);
+    paddingX + (idx / Math.max(points.length - 1, 1)) * (width - paddingX * 2);
 
   const getY = (w: number) =>
     height - paddingY - ((w - minW) / (maxW - minW)) * (height - paddingY * 2);

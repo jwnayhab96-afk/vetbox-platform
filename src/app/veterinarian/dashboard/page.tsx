@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate, SPECIES_LABELS } from "@/lib/utils";
 import {
   Stethoscope,
@@ -25,25 +25,43 @@ import {
 } from "lucide-react";
 
 export default function VetDashboardPage() {
-  // Use Dr. Youssef El-Shennawy by default in demo
-  const vetId = "33333333-3333-3333-3333-333333333333";
-  const vet = store.getVeterinarianById(vetId) || store.getVeterinarians()[0];
-  const [links, setLinks] = useState(() => store.getLinksForVet(vet.id));
+  const [vetId, setVetId] = useState("");
+  const [vet, setVet] = useState<any>(null);
+  const [links, setLinks] = useState<any[]>([]);
+  const [visits, setVisits] = useState<any[]>([]);
+
+  const load = async (userId: string) => {
+    const supabase = createClient();
+    const [vetResult, linkResult, visitResult] = await Promise.all([
+      supabase.from("veterinarian_profiles").select("*, profile:profiles(*)").eq("id", userId).single(),
+      supabase.from("pet_vet_links").select("*, pet:pets(*)").eq("vet_id", userId).order("created_at", { ascending: false }),
+      supabase.from("medical_visits").select("*").eq("vet_id", userId).order("visit_date", { ascending: false }),
+    ]);
+    if (vetResult.data) setVet(vetResult.data);
+    setLinks(linkResult.data || []); setVisits(visitResult.data || []);
+  };
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (!user) { window.location.assign("/auth/login"); return; }
+      setVetId(user.id); load(user.id);
+    });
+  }, []);
 
   const pendingRequests = links.filter((l) => l.status === "pending");
   const acceptedPatients = links.filter((l) => l.status === "accepted");
-  const visits = store.getPets().flatMap((p) => store.getVisitsByPet(p.id)).filter((v) => v.vet_id === vet.id);
-
-  const handleAction = (linkId: string, status: "accepted" | "rejected") => {
-    store.updateConnectionStatus(linkId, status, vet.id);
-    setLinks([...store.getLinksForVet(vet.id)]);
+  const handleAction = async (linkId: string, status: "accepted" | "rejected") => {
+    const { error } = await createClient().from("pet_vet_links").update({ status, responded_at: new Date().toISOString() }).eq("id", linkId).eq("vet_id", vetId);
+    if (error) { window.alert(error.message); return; }
+    await load(vetId);
   };
+
+  if (!vet) return null;
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
       <Header
-        title={`مرحباً، ${vet.profile?.full_name || "د. يوسف الشناوي"}`}
-        subtitle={`بوابة الطبيب البيطري • ${vet.clinic_affiliation_name || "مستشفى النيل البيطري التخصصي"}`}
+        title={`مرحباً، ${vet.profile?.full_name || ""}`}
+        subtitle={`بوابة الطبيب البيطري${vet.clinic_affiliation_name ? ` • ${vet.clinic_affiliation_name}` : ""}`}
         role="veterinarian"
         action={{
           label: "تسجيل كشف سريري جديد",
@@ -54,18 +72,18 @@ export default function VetDashboardPage() {
 
       <div className="p-4 md:p-8 space-y-8 max-w-7xl">
         {/* Verification Status Banner */}
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-right">
+        <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-right ${vet.verification_status === "verified" ? "bg-emerald-50 border-emerald-200/80" : "bg-amber-50 border-amber-200/80"}`}>
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+            <div className={`h-10 w-10 rounded-xl text-white flex items-center justify-center shrink-0 ${vet.verification_status === "verified" ? "bg-emerald-600" : "bg-amber-600"}`}>
               <ShieldCheck className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h4 className="font-bold text-sm text-emerald-950">حساب طبيب معتمد ومرخص</h4>
-                <Badge variant="success" className="text-[10px]">موثق بالنقابة</Badge>
+                <h4 className="font-bold text-sm text-emerald-950">{vet.verification_status === "verified" ? "حساب طبيب معتمد ومرخص" : "بيانات الترخيص قيد المراجعة"}</h4>
+                <Badge variant={vet.verification_status === "verified" ? "success" : "warning"} className="text-[10px]">{vet.verification_status === "verified" ? "موثق بالنقابة" : "قيد الفحص"}</Badge>
               </div>
               <p className="text-xs text-emerald-800">
-                رقم القيد النقابي: <strong className="font-mono">{vet.license_number || "EGY-VET-48920"}</strong> • النقابة العامة للأطباء البيطريين
+                رقم القيد النقابي: <strong className="font-mono">{vet.license_number || "غير مسجل"}</strong> • النقابة العامة للأطباء البيطريين
               </p>
             </div>
           </div>
@@ -213,7 +231,7 @@ export default function VetDashboardPage() {
             ) : (
               acceptedPatients.map((lnk) => {
                 if (!lnk.pet) return null;
-                const petVisits = store.getVisitsByPet(lnk.pet.id);
+                const petVisits = visits.filter((visit) => visit.pet_id === lnk.pet.id);
                 return (
                   <Card key={lnk.id} className="border-border/80 bg-card p-5 space-y-4 hover:border-primary/40 transition-colors">
                     <div className="flex items-center gap-3">

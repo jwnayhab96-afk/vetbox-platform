@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
@@ -8,7 +8,7 @@ import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import {
   MapPin,
   PhoneCall,
@@ -22,7 +22,11 @@ import {
 export default function ClinicDetailClient({ id: propId }: { id?: string }) {
   const params = useParams();
   const clinicId = propId || (params?.id as string);
-  const clinic = store.getClinicById(clinicId);
+  const [clinic, setClinic] = useState<any>(null);
+  useEffect(() => {
+    createClient().from("clinics").select("*").eq("id", clinicId).single()
+      .then(({ data }) => setClinic(data));
+  }, [clinicId]);
 
   if (!clinic) {
     return (
@@ -118,7 +122,7 @@ export default function ClinicDetailClient({ id: propId }: { id?: string }) {
               <CardContent className="p-6 space-y-4 text-right">
                 <h3 className="font-bold text-lg text-foreground">الخدمات الطبية والتجهيزات</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  {clinic.services.map((srv, idx) => (
+                  {clinic.services.map((srv: string, idx: number) => (
                     <div key={idx} className="flex items-center gap-2 text-sm text-foreground bg-muted/30 p-2.5 rounded-xl border border-border/50">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                       <span>{srv}</span>
@@ -128,7 +132,7 @@ export default function ClinicDetailClient({ id: propId }: { id?: string }) {
 
                 <h4 className="font-bold text-base text-foreground pt-4">الفصائل والحيوانات التي يتم علاجها</h4>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {clinic.species_treated.map((sp, idx) => (
+                  {clinic.species_treated.map((sp: string, idx: number) => (
                     <Badge key={idx} variant="outline" className="text-xs px-3 py-1">
                       {sp}
                     </Badge>

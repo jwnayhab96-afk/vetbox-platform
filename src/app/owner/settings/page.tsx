@@ -1,28 +1,41 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { User, Phone, MapPin, Check } from "lucide-react";
 
 export default function OwnerSettingsPage() {
-  const currentProfile = store.getCurrentProfile();
-  const [name, setName] = useState(currentProfile.full_name);
-  const [phone, setPhone] = useState(currentProfile.phone || "");
-  const [city, setCity] = useState(currentProfile.city || "المعادي");
-  const [governorate, setGovernorate] = useState(currentProfile.governorate);
+  const [userId, setUserId] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [governorate, setGovernorate] = useState("");
   const [saved, setSaved] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.assign("/auth/login"); return; }
+      setUserId(user.id);
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      if (!error && data) {
+        setName(data.full_name || ""); setPhone(data.phone || "");
+        setCity(data.city || ""); setGovernorate(data.governorate || "");
+      }
+    };
+    load();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    currentProfile.full_name = name;
-    currentProfile.phone = phone;
-    currentProfile.city = city;
-    currentProfile.governorate = governorate;
+    const { error } = await createClient().from("profiles").update({ full_name: name, phone, city, governorate, updated_at: new Date().toISOString() }).eq("id", userId);
+    if (error) { window.alert(error.message); return; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

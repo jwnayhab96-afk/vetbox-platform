@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import {
   Stethoscope,
   ShieldCheck,
@@ -22,12 +22,19 @@ import {
 
 export default function VetsDirectoryPage() {
   const [search, setSearch] = useState("");
-  const vets = store.getVeterinarians();
+  const [vets, setVets] = useState<any[]>([]);
+  useEffect(() => {
+    createClient().from("veterinarian_directory").select("*")
+      .then(({ data, error }) => {
+        if (error) console.error("Unable to load veterinarians", error);
+        else setVets(data || []);
+      });
+  }, []);
 
   const filtered = vets.filter((v) => {
     const nameMatch = v.profile?.full_name.toLowerCase().includes(search.toLowerCase());
     const bioMatch = v.bio?.toLowerCase().includes(search.toLowerCase());
-    const specMatch = v.specializations.some((s) => s.toLowerCase().includes(search.toLowerCase()));
+    const specMatch = (v.specializations as string[]).some((s: string) => s.toLowerCase().includes(search.toLowerCase()));
     return nameMatch || bioMatch || specMatch;
   });
 

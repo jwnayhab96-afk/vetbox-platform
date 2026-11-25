@@ -1,16 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { FileText, Plus, Eye, CheckCircle2 } from "lucide-react";
 
 export default function AdminArticlesPage() {
-  const articles = store.getArticles();
+  const [articles, setArticles] = useState<any[]>([]);
+  useEffect(() => {
+    createClient().from("articles").select("*, reviewer:veterinarian_profiles(*, profile:profiles(*))").order("created_at", { ascending: false })
+      .then(({ data, error }) => { if (error) console.error(error); else setArticles(data || []); });
+  }, []);
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
@@ -31,7 +35,7 @@ export default function AdminArticlesPage() {
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-1">{art.summary}</p>
                 <span className="text-[11px] text-muted-foreground block">
-                  مراجعة: د. {art.reviewer?.profile?.full_name || "يوسف الشناوي"} • الفصيلة المستهدفة: {art.species_target}
+                  مراجعة: {art.reviewer?.profile?.full_name || "غير محدد"} • الفصيلة المستهدفة: {art.species_target}
                 </span>
               </div>
 

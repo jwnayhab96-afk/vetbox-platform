@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -17,11 +17,10 @@ import {
   ShieldCheck,
   LogOut,
   ChevronLeft,
-  Sparkles,
 } from "lucide-react";
-import { store } from "@/lib/data/store";
 import { Logo } from "@/components/shared/logo";
 import { Badge } from "@/components/ui/badge";
+import { createClient } from "@/lib/supabase/client";
 
 interface SidebarProps {
   role: "owner" | "veterinarian" | "admin";
@@ -30,7 +29,40 @@ interface SidebarProps {
 export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const currentProfile = store.getCurrentProfile();
+  const [currentProfile, setCurrentProfile] = useState<any>(null);
+
+  useEffect(() => {
+    async function syncAuthUser() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { router.replace("/auth/login"); return; }
+        {
+          const { data: realProfile, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+
+          if (error || !realProfile || realProfile.role !== role) { router.replace("/auth/login"); return; }
+          setCurrentProfile(realProfile);
+        }
+      } catch (e) {
+        console.warn("Auth sync error:", e);
+      }
+    }
+    syncAuthUser();
+  }, [role, router]);
+
+  const handleSignOut = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn("Sign out:", e);
+    }
+    router.push("/auth/login");
+  };
 
   const ownerLinks = [
     { href: "/owner/dashboard", label: "نظرة عامة", icon: LayoutDashboard },
@@ -63,13 +95,6 @@ export function Sidebar({ role }: SidebarProps) {
 
   const links = role === "owner" ? ownerLinks : role === "veterinarian" ? vetLinks : adminLinks;
 
-  const handleRoleSwitch = (newRole: "owner" | "veterinarian" | "admin") => {
-    store.setCurrentRole(newRole);
-    if (newRole === "owner") router.push("/owner/dashboard");
-    else if (newRole === "veterinarian") router.push("/veterinarian/dashboard");
-    else router.push("/admin/dashboard");
-  };
-
   return (
     <aside className="w-64 md:w-72 border-l border-border/80 bg-card flex flex-col justify-between shrink-0 min-h-screen">
       {/* Brand & Role Tag */}
@@ -79,43 +104,6 @@ export function Sidebar({ role }: SidebarProps) {
           <Link href="/" title="الرئيسية" className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted">
             <ChevronLeft className="h-4 w-4" />
           </Link>
-        </div>
-
-        {/* Fast Role Switcher */}
-        <div className="px-4 pt-3 pb-2">
-          <div className="p-2.5 rounded-xl bg-muted/50 border border-border/60">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-primary" /> تبديل الحساب التجريبي:
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-1 text-[11px]">
-              <button
-                onClick={() => handleRoleSwitch("owner")}
-                className={`py-1.5 rounded-lg font-bold transition-all ${
-                  role === "owner" ? "bg-primary text-white shadow-xs" : "bg-card text-muted-foreground hover:bg-card/80"
-                }`}
-              >
-                مربي
-              </button>
-              <button
-                onClick={() => handleRoleSwitch("veterinarian")}
-                className={`py-1.5 rounded-lg font-bold transition-all ${
-                  role === "veterinarian" ? "bg-primary text-white shadow-xs" : "bg-card text-muted-foreground hover:bg-card/80"
-                }`}
-              >
-                طبيب
-              </button>
-              <button
-                onClick={() => handleRoleSwitch("admin")}
-                className={`py-1.5 rounded-lg font-bold transition-all ${
-                  role === "admin" ? "bg-primary text-white shadow-xs" : "bg-card text-muted-foreground hover:bg-card/80"
-                }`}
-              >
-                مشرف
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Navigation items */}
@@ -145,26 +133,35 @@ export function Sidebar({ role }: SidebarProps) {
       <div className="p-4 border-t border-border/80 space-y-3">
         <div className="flex items-center gap-3 p-2 rounded-xl bg-muted/40">
           <div className="h-9 w-9 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center shrink-0 text-sm overflow-hidden border border-primary/20">
-            {currentProfile.avatar_url ? (
+            {currentProfile?.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={currentProfile.avatar_url} alt={currentProfile.full_name} className="h-full w-full object-cover" />
             ) : (
-              currentProfile.full_name.charAt(0)
+              currentProfile?.full_name?.charAt(0) || "…"
             )}
           </div>
           <div className="flex flex-col min-w-0 flex-1">
-            <span className="text-xs font-bold text-foreground truncate">{currentProfile.full_name}</span>
+            <span className="text-xs font-bold text-foreground truncate">{currentProfile?.full_name || ""}</span>
             <span className="text-[11px] text-muted-foreground capitalize font-medium">{role}</span>
           </div>
         </div>
 
-        <Link
-          href="/"
-          className="flex items-center justify-center gap-2 w-full py-2 text-xs font-semibold text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
-        >
-          <LogOut className="h-3.5 w-3.5" />
-          <span>الخروج إلى الموقع العام</span>
-        </Link>
+        <div className="flex flex-col gap-1">
+          <Link
+            href="/"
+            className="flex items-center justify-center gap-2 w-full py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            <span>العودة للموقع العام</span>
+          </Link>
+          <button
+            onClick={handleSignOut}
+            className="flex items-center justify-center gap-2 w-full py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 transition-colors rounded-lg hover:bg-rose-500/10 cursor-pointer"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span>تسجيل الخروج</span>
+          </button>
+        </div>
       </div>
     </aside>
   );

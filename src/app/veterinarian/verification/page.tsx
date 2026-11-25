@@ -1,33 +1,51 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/data/store";
+import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
 import { ShieldCheck, Award, FileCheck, UploadCloud, Clock, Check } from "lucide-react";
 
 export default function VetVerificationPage() {
-  const vetId = "33333333-3333-3333-3333-333333333333";
-  const [vet, setVet] = useState(() => store.getVeterinarianById(vetId) || store.getVeterinarians()[0]);
-
-  const [licenseNumber, setLicenseNumber] = useState(vet.license_number || "EGY-VET-48920");
-  const [experience, setExperience] = useState(vet.years_of_experience);
-  const [education, setEducation] = useState(vet.education || "بكالوريوس طب وجراحة بيطرية - جامعة القاهرة");
+  const [vet, setVet] = useState<any>(null);
+  const [vetId, setVetId] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [experience, setExperience] = useState(0);
+  const [education, setEducation] = useState("");
   const [saved, setSaved] = useState(false);
 
-  const handleUpdate = (e: React.FormEvent) => {
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.assign("/auth/login"); return; }
+      setVetId(user.id);
+      const { data, error } = await supabase.from("veterinarian_profiles").select("*").eq("id", user.id).single();
+      if (!error && data) {
+        setVet(data); setLicenseNumber(data.license_number || "");
+        setExperience(data.years_of_experience || 0); setEducation(data.education || "");
+      }
+    };
+    load();
+  }, []);
+
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    vet.license_number = licenseNumber;
-    vet.years_of_experience = Number(experience);
-    vet.education = education;
+    const { error } = await createClient().rpc("submit_veterinarian_verification", {
+      license: licenseNumber, experience_years: Number(experience), education_text: education,
+    });
+    if (error) { window.alert(error.message); return; }
+    setVet((value: any) => ({ ...value, license_number: licenseNumber, years_of_experience: Number(experience), education, verification_status: value?.verification_status === "rejected" ? "pending" : value?.verification_status }));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  if (!vet) return null;
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
