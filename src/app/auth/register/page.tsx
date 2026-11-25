@@ -55,7 +55,9 @@ export default function RegisterPage() {
       });
 
       if (error) {
-        if (error.message.includes("User already registered")) {
+        if (error.message.toLowerCase().includes("email rate limit exceeded") || error.code === "over_email_send_rate_limit") {
+          setErrorMessage("تم تجاوز الحد المؤقت لإرسال رسائل التأكيد. انتظر قليلًا قبل المحاولة مرة أخرى، أو استخدم رابط التأكيد الذي وصلك بالفعل.");
+        } else if (error.message.includes("User already registered")) {
           setErrorMessage("هذا البريد الإلكتروني مسجل بالفعل في منصة فيت بوكس. يرجى تسجيل الدخول بدلاً من ذلك.");
         } else if (error.message.includes("Password should be at least")) {
           setErrorMessage("كلمة المرور ضعيفة. يرجى استخدام 6 خانات على الأقل.");

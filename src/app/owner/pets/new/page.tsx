@@ -21,8 +21,11 @@ import {
   Scale,
   QrCode,
   Sparkles,
-  Image as ImageIcon,
+  Upload,
+  X,
+  LoaderCircle,
 } from "lucide-react";
+import { compressPetImage } from "@/lib/image/compress-image";
 
 export default function AddPetPage() {
   const router = useRouter();
@@ -48,7 +51,9 @@ export default function AddPetPage() {
   const [color, setColor] = useState("");
   const [microchipNumber, setMicrochipNumber] = useState("");
   const [identifyingMarks, setIdentifyingMarks] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [compressingPhoto, setCompressingPhoto] = useState(false);
   const [isSpayedNeutered, setIsSpayedNeutered] = useState(false);
 
   // Species conditional attribute
@@ -60,6 +65,32 @@ export default function AddPetPage() {
       else router.replace("/auth/login");
     });
   }, [router]);
+
+  useEffect(() => () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+  }, [photoPreview]);
+
+  const handlePhotoSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = event.target.files?.[0];
+    event.target.value = "";
+    if (!selected) return;
+
+    setCompressingPhoto(true);
+    try {
+      const compressed = await compressPetImage(selected);
+      setPhotoFile(compressed);
+      setPhotoPreview(URL.createObjectURL(compressed));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "تعذر معالجة الصورة.");
+    } finally {
+      setCompressingPhoto(false);
+    }
+  };
+
+  const clearPhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+  };
 
   const handleNext = () => {
     if (step === 1 && !name.trim()) {
@@ -87,6 +118,27 @@ export default function AddPetPage() {
     }
 
     const supabase = createClient();
+    let uploadedPhotoPath: string | null = null;
+    let uploadedPhotoUrl: string | null = null;
+
+    if (photoFile) {
+      uploadedPhotoPath = `${ownerId}/${crypto.randomUUID()}.webp`;
+      const { error: uploadError } = await supabase.storage
+        .from("pet-photos")
+        .upload(uploadedPhotoPath, photoFile, {
+          contentType: "image/webp",
+          cacheControl: "31536000",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        setLoading(false);
+        window.alert(`تعذر رفع الصورة: ${uploadError.message}`);
+        return;
+      }
+      uploadedPhotoUrl = supabase.storage.from("pet-photos").getPublicUrl(uploadedPhotoPath).data.publicUrl;
+    }
+
     const { data: newPet, error } = await supabase.from("pets").insert({
       owner_id: ownerId,
       name,
@@ -101,13 +153,16 @@ export default function AddPetPage() {
       color: color || null,
       microchip_number: microchipNumber || null,
       identifying_marks: identifyingMarks || null,
-      photo_url: photoUrl || null,
+      photo_url: uploadedPhotoUrl,
       is_spayed_neutered: isSpayedNeutered,
       species_attributes: speciesAttributes,
       is_deceased: false,
     }).select("id").single();
 
     if (error || !newPet) {
+      if (uploadedPhotoPath) {
+        await supabase.storage.from("pet-photos").remove([uploadedPhotoPath]);
+      }
       setLoading(false);
       window.alert(error?.message || "تعذر حفظ بيانات الحيوان.");
       return;
@@ -317,14 +372,34 @@ export default function AddPetPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="photo">رابط صورة الحيوان (أو صورة افتراضية)</Label>
-                    <Input
+                    <Label htmlFor="photo">صورة الحيوان (اختياري)</Label>
+                    <input
                       id="photo"
-                      placeholder="https://..."
-                      value={photoUrl}
-                      onChange={(e) => setPhotoUrl(e.target.value)}
-                      icon={<ImageIcon className="h-4 w-4" />}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      className="sr-only"
+                      onChange={handlePhotoSelect}
                     />
+                    {photoPreview ? (
+                      <div className="flex items-center gap-4 rounded-xl border border-border p-3">
+                        <img src={photoPreview} alt="معاينة صورة الحيوان" className="h-20 w-20 rounded-lg object-cover" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{photoFile?.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            تم ضغط الصورة تلقائيًا إلى {((photoFile?.size || 0) / 1024).toFixed(0)} كيلوبايت
+                          </p>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" onClick={clearPhoto} aria-label="إزالة الصورة">
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <label htmlFor="photo" className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 p-5 text-sm hover:bg-muted/60">
+                        {compressingPhoto ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        <span>{compressingPhoto ? "جارٍ ضغط الصورة..." : "اختر صورة من الجهاز"}</span>
+                      </label>
+                    )}
+                    <p className="text-xs text-muted-foreground">تُحوّل الصورة إلى WebP وتُضغط تلقائيًا قبل رفعها.</p>
                   </div>
 
                   <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/40 border border-border">
@@ -413,7 +488,7 @@ export default function AddPetPage() {
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button type="submit" className="gap-1.5 font-semibold px-6" isLoading={loading}>
+                <Button type="submit" className="gap-1.5 font-semibold px-6" isLoading={loading || compressingPhoto}>
                   <Check className="h-4 w-4" />
                   حفظ وإنشاء بطاقة الهوية الطبية
                 </Button>
