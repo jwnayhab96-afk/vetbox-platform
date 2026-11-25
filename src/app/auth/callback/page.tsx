@@ -9,17 +9,39 @@ function CallbackHandler() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    let active = true;
     const code = searchParams.get("code");
-    if (code) {
+
+    const finishSignIn = async () => {
       const supabase = createClient();
-      supabase.auth.exchangeCodeForSession(code).then(() => {
-        router.push("/owner/dashboard");
-      }).catch(() => {
-        router.push("/owner/dashboard");
-      });
-    } else {
-      router.push("/owner/dashboard");
-    }
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          if (active) router.replace("/auth/login?confirmation=failed");
+          return;
+        }
+      }
+
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        if (active) router.replace("/auth/login?confirmation=failed");
+        return;
+      }
+
+      const role = user.user_metadata?.role;
+      const destination = role === "veterinarian"
+        ? "/veterinarian/verification"
+        : role === "admin"
+          ? "/admin/dashboard"
+          : "/owner/dashboard";
+      if (active) router.replace(destination);
+    };
+
+    void finishSignIn().catch(() => {
+      if (active) router.replace("/auth/login?confirmation=failed");
+    });
+
+    return () => { active = false; };
   }, [router, searchParams]);
 
   return (

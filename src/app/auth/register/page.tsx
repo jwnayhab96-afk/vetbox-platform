@@ -50,6 +50,7 @@ export default function RegisterPage() {
             governorate: governorate,
             license_number: role === "veterinarian" ? licenseNumber.trim() : null,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback/`,
         },
       });
 
