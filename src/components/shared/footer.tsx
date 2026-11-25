@@ -16,7 +16,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="container py-12 md:py-16 space-y-12">
+      <div className="container space-y-8 py-8 md:space-y-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand info & Official Social Channels */}
           <div className="lg:col-span-2 space-y-4">
@@ -106,7 +106,7 @@ export function Footer() {
           </div>
 
           {/* Quick links 1 */}
-          <div className="space-y-3">
+          <div className="hidden space-y-3 md:block">
             <h4 className="text-sm font-semibold text-foreground tracking-wide">الخدمات والاكتشاف</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
@@ -133,7 +133,7 @@ export function Footer() {
           </div>
 
           {/* Quick links 2 */}
-          <div className="space-y-3">
+          <div className="hidden space-y-3 md:block">
             <h4 className="text-sm font-semibold text-foreground tracking-wide">للمربين والحيوانات</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
@@ -160,7 +160,7 @@ export function Footer() {
           </div>
 
           {/* Quick links 3 */}
-          <div className="space-y-3">
+          <div className="hidden space-y-3 md:block">
             <h4 className="text-sm font-semibold text-foreground tracking-wide">للأطباء والعيادات</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
@@ -188,7 +188,7 @@ export function Footer() {
         </div>
 
         {/* BESPOKE FOUNDER & EXECUTIVE LEADERSHIP SHOWCASE */}
-        <div className="relative overflow-hidden rounded-3xl border border-emerald-800/30 bg-gradient-to-br from-[#062017] via-[#082b20] to-[#03130d] text-white p-7 sm:p-9 md:p-11 shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl border border-emerald-800/30 bg-gradient-to-br from-[#062017] via-[#082b20] to-[#03130d] p-5 text-white shadow-2xl sm:p-9 md:p-11">
           {/* Ambient Lighting & Luxury Watermark */}
           <div className="absolute -top-24 -left-24 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -196,7 +196,7 @@ export function Footer() {
             VETBOX
           </span>
 
-          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 md:gap-12">
+          <div className="relative z-10 flex flex-col items-start justify-between gap-6 md:gap-12 lg:flex-row lg:items-center">
             {/* Right: Editorial Creed & Vision */}
             <div className="space-y-4 text-right max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/20 text-emerald-300 text-xs font-bold tracking-wider font-brand">
@@ -218,7 +218,7 @@ export function Footer() {
               {/* Single, Distinctive Founder Name & Role */}
               <div className="space-y-1 text-right lg:text-left">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="font-editorial italic font-bold text-3xl sm:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-white to-amber-200 tracking-wide drop-shadow-sm">
+                  <h3 className="font-signature font-bold text-4xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-white to-amber-200 tracking-wide drop-shadow-sm">
                     John Ehab
                   </h3>
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold tracking-wide font-sans border border-emerald-400/30">
