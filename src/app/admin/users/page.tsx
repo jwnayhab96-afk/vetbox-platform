@@ -12,16 +12,18 @@ import { Users, Search, Shield, User, Stethoscope } from "lucide-react";
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     createClient().from("profiles").select("*").order("created_at", { ascending: false })
-      .then(({ data, error }) => { if (error) console.error(error); else setUsers(data || []); });
+      .then(({ data, error }) => { if (error) setError(error.message); else setUsers(data || []); setLoading(false); });
   }, []);
 
   const filtered = users.filter((u) => {
     return (
-      u.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      (u.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
       (u.phone && u.phone.includes(search)) ||
-      u.governorate.toLowerCase().includes(search.toLowerCase())
+      (u.governorate || "").toLowerCase().includes(search.toLowerCase())
     );
   });
 
@@ -34,6 +36,7 @@ export default function AdminUsersPage() {
       />
 
       <div className="p-4 md:p-8 space-y-6 max-w-6xl">
+        {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p className="font-semibold">تعذر تحميل المستخدمين من Supabase</p><p dir="ltr" className="mt-1 break-all text-xs">{error}</p></div>}
         <div className="max-w-md">
           <Input
             placeholder="ابحث بالاسم، رقم الهاتف، أو المحافظة..."
@@ -56,6 +59,8 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
+                {!loading && !error && filtered.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">{users.length ? "لا توجد نتائج مطابقة للبحث." : "لا توجد حسابات مسجلة لعرضها."}</td></tr>}
+                {loading && <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">جارٍ تحميل المستخدمين...</td></tr>}
                 {filtered.map((user) => (
                   <tr key={user.id} className="hover:bg-muted/30 transition-colors">
                     <td className="p-3.5 font-bold text-foreground flex items-center gap-2">

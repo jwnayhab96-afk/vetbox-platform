@@ -91,6 +91,7 @@ export function Sidebar({ role }: SidebarProps) {
     { href: "/admin/clinics", label: "العيادات والمستشفيات", icon: Building2 },
     { href: "/admin/articles", label: "المقالات والمعرفة", icon: FileText },
     { href: "/admin/reports", label: "سجلات الرقابة والتدقيق", icon: FileText },
+    { href: "/admin/settings", label: "إعدادات المنصة", icon: Settings },
   ];
 
   const links = role === "owner" ? ownerLinks : role === "veterinarian" ? vetLinks : adminLinks;

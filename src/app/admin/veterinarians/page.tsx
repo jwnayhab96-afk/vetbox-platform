@@ -12,11 +12,15 @@ import { ShieldCheck, CheckCircle2, XCircle, Search, Clock, Award, FileText } fr
 export default function AdminVeterinariansPage() {
   const [vets, setVets] = useState<any[]>([]);
   const [filter, setFilter] = useState<"all" | "pending" | "verified" | "rejected">("all");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadVeterinarians = async () => {
     const { data, error } = await createClient().from("veterinarian_profiles").select("*, profile:profiles(*)").order("created_at", { ascending: false });
-    if (error) { console.error("Unable to load veterinarian applications", error); return; }
+    if (error) { setLoadError(error.message); setLoading(false); return; }
     setVets(data || []);
+    setLoadError(null);
+    setLoading(false);
   };
   useEffect(() => { loadVeterinarians(); }, []);
 
@@ -55,6 +59,7 @@ export default function AdminVeterinariansPage() {
       />
 
       <div className="p-4 md:p-8 space-y-6 max-w-7xl">
+        {loadError && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p className="font-semibold">تعذر تحميل طلبات الأطباء من Supabase</p><p dir="ltr" className="mt-1 break-all text-xs">{loadError}</p><Button className="mt-3" size="sm" variant="outline" onClick={() => void loadVeterinarians()}>إعادة المحاولة</Button></div>}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setFilter("all")}
@@ -83,6 +88,8 @@ export default function AdminVeterinariansPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {!loading && !loadError && filtered.length === 0 && <Card className="p-8 text-center text-sm text-muted-foreground md:col-span-2 lg:col-span-3">لا توجد ملفات أطباء{filter === "all" ? " مسجلة" : filter === "pending" ? " قيد الانتظار" : filter === "verified" ? " معتمدة" : " مرفوضة"}.</Card>}
+          {loading && <p className="text-sm text-muted-foreground md:col-span-2 lg:col-span-3">جارٍ تحميل ملفات الأطباء...</p>}
           {filtered.map((vet) => (
             <Card key={vet.id} className="border-border/80 bg-card p-6 space-y-4">
               <div className="flex items-start justify-between">

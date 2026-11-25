@@ -28,8 +28,11 @@ export default function AdminDashboardPage() {
   const [pets, setPets] = useState<any[]>([]);
   const [clinics, setClinics] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [loadErrors, setLoadErrors] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const loadDashboard = async () => {
+    setLoading(true);
     const supabase = createClient();
     const [usersResult, vetsResult, petsResult, clinicsResult, logsResult] = await Promise.all([
       supabase.from("profiles").select("*", { count: "exact" }),
@@ -38,11 +41,14 @@ export default function AdminDashboardPage() {
       supabase.from("clinics").select("*"),
       supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(20),
     ]);
+    const results = [usersResult, vetsResult, petsResult, clinicsResult, logsResult];
+    setLoadErrors(results.flatMap((result) => result.error ? [result.error.message] : []));
     if (usersResult.data) setUsers(usersResult.data);
     if (vetsResult.data) setVets(vetsResult.data);
     if (petsResult.data) setPets(petsResult.data);
     if (clinicsResult.data) setClinics(clinicsResult.data);
     if (logsResult.data) setAuditLogs(logsResult.data);
+    setLoading(false);
   };
   useEffect(() => { loadDashboard(); }, []);
 
@@ -66,8 +72,10 @@ export default function AdminDashboardPage() {
       />
 
       <div className="p-4 md:p-8 space-y-8 max-w-7xl">
+        {loadErrors.length > 0 && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold">بعض بيانات لوحة الإدارة لم تُحمّل من Supabase</p><ul dir="ltr" className="mt-2 list-disc space-y-1 pl-5 text-xs">{loadErrors.map((message, index) => <li key={`${index}-${message}`} className="break-all">{message}</li>)}</ul></div><Button size="sm" variant="outline" onClick={() => void loadDashboard()}>إعادة المحاولة</Button></div></div>}
+        {loading && <p className="text-sm text-muted-foreground">جارٍ تحميل بيانات الإدارة...</p>}
         {/* STATS OVERVIEW */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <Card className="border-border/80 shadow-xs">
             <CardContent className="p-5 flex items-center justify-between text-right">
               <div>
@@ -77,6 +85,13 @@ export default function AdminDashboardPage() {
               <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                 <Users className="h-5 w-5" />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/80 shadow-xs">
+            <CardContent className="p-5 flex items-center justify-between text-right">
+              <div><p className="text-xs text-muted-foreground font-medium">العيادات المسجلة</p><h3 className="text-2xl font-bold text-foreground mt-1">{clinics.length}</h3></div>
+              <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center"><Building className="h-5 w-5" /></div>
             </CardContent>
           </Card>
 
@@ -207,7 +222,7 @@ export default function AdminDashboardPage() {
 
           <Card className="border-border/80 overflow-hidden">
             <div className="divide-y divide-border/60">
-              {auditLogs.slice(0, 5).map((log) => (
+              {auditLogs.length === 0 ? <p className="p-6 text-center text-sm text-muted-foreground">{loading ? "جارٍ تحميل سجل التدقيق..." : "لا توجد سجلات تدقيق مسجلة حتى الآن."}</p> : auditLogs.slice(0, 5).map((log) => (
                 <div key={log.id} className="p-4 flex items-center justify-between text-xs text-right">
                   <div className="space-y-0.5">
                     <span className="font-mono font-bold text-primary block">{log.action}</span>
