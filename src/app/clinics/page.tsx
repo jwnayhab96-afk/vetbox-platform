@@ -386,7 +386,7 @@ export default function ClinicsDirectoryPage() {
                       )}
                     </div>
 
-                    <Link href={`/clinics/${clinic.id}`} className="w-full">
+                    <Link href={`/clinics/detail?id=${encodeURIComponent(clinic.id)}`} className="w-full">
                       <Button size="sm" variant="outline" className="w-full text-xs font-bold rounded-xl border-border hover:border-primary">
                         التفاصيل وحجز موعد ←
                       </Button>

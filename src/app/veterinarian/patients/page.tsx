@@ -95,7 +95,7 @@ export default function VetPatientsPage() {
                   </div>
 
                   <div className="pt-2 border-t border-border/60 flex items-center justify-between">
-                    <Link href={`/veterinarian/patients/${p.id}`}>
+                    <Link href={`/veterinarian/patients/detail?petId=${encodeURIComponent(p.id)}`}>
                       <Button variant="outline" size="sm" className="text-xs">
                         فتح السجل الطبي
                       </Button>

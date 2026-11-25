@@ -100,7 +100,7 @@ export default function OwnerVeterinariansPage() {
                 </div>
 
                 <div className="flex items-center justify-between pt-1">
-                  <Link href={`/owner/pets/${lnk.pet_id}`}>
+                  <Link href={`/owner/pets/detail?id=${encodeURIComponent(lnk.pet_id)}`}>
                     <Button variant="outline" size="sm" className="text-xs">
                       عرض سجل الحيوان
                     </Button>

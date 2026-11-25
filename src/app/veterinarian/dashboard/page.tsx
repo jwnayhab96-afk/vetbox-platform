@@ -257,7 +257,7 @@ export default function VetDashboardPage() {
                     </div>
 
                     <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-                      <Link href={`/veterinarian/patients/${lnk.pet.id}`}>
+                      <Link href={`/veterinarian/patients/detail?petId=${encodeURIComponent(lnk.pet.id)}`}>
                         <Button variant="outline" size="sm" className="text-xs">
                           الملف الطبي الكامل
                         </Button>

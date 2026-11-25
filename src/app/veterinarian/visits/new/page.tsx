@@ -113,7 +113,7 @@ function ClinicalVisitForm() {
     triggerConfetti();
 
     setLoading(false);
-    router.push(`/veterinarian/patients/${petId}`);
+    router.push(`/veterinarian/patients/detail?petId=${encodeURIComponent(petId)}`);
   };
 
   return (

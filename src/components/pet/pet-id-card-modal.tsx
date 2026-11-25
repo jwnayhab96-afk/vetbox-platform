@@ -51,7 +51,7 @@ export function PetIdCardModal({
   
   // URL that the QR code encodes (points to the live pet verification or profile)
   const currentOrigin = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
-  const profileUrl = `${currentOrigin}/verify/pet/${pet.id}`;
+  const profileUrl = `${currentOrigin}/verify/pet-check?petId=${encodeURIComponent(pet.id)}`;
 
   const ownerName = owner?.full_name || "غير مسجل";
   const ownerPhone = owner?.phone || "غير مسجل";

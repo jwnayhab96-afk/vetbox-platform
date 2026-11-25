@@ -137,7 +137,7 @@ export default function LearnPage() {
                   <span className="text-[11px] text-muted-foreground">
                     مراجعة: {art.reviewer?.profile?.full_name || "غير محدد"}
                   </span>
-                  <Link href={`/learn/${art.slug}`}>
+                  <Link href={`/learn/article?slug=${encodeURIComponent(art.slug)}`}>
                     <Button size="sm" variant="outline" className="text-xs">
                       قراءة المقال ←
                     </Button>

@@ -541,7 +541,7 @@ export default function HomePage() {
                           <PhoneCall className="h-3.5 w-3.5 text-primary" />
                           {clinic.phone}
                         </span>
-                        <Link href={`/clinics/${clinic.id}`}>
+                        <Link href={`/clinics/detail?id=${encodeURIComponent(clinic.id)}`}>
                           <Button size="sm" variant="ghost" className="text-xs text-primary font-bold hover:bg-primary/10">
                             التفاصيل والخدمات ←
                           </Button>
@@ -607,7 +607,7 @@ export default function HomePage() {
                         </div>
                       </div>
                       <div className="p-5 pt-0">
-                        <Link href={`/learn/${art.slug}`}>
+                        <Link href={`/learn/article?slug=${encodeURIComponent(art.slug)}`}>
                           <Button variant="link" className="text-xs font-bold text-primary p-0">
                             قراءة المقال كاملاً ←
                           </Button>

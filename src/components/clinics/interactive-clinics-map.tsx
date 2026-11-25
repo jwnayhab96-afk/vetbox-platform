@@ -225,7 +225,7 @@ export function InteractiveClinicsMap({
               )}
             </div>
 
-            <Link href={`/clinics/${activeClinic.id}`}>
+            <Link href={`/clinics/detail?id=${encodeURIComponent(activeClinic.id)}`}>
               <Button size="sm" variant="outline" className="text-xs h-8 border-white/20 text-white hover:bg-white/10">
                 <span>الملف الكامل والخدمات</span>
                 <ExternalLink className="h-3 w-3 mr-1" />

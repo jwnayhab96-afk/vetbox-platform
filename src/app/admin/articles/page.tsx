@@ -39,7 +39,7 @@ export default function AdminArticlesPage() {
                 </span>
               </div>
 
-              <Link href={`/learn/${art.slug}`}>
+              <Link href={`/learn/article?slug=${encodeURIComponent(art.slug)}`}>
                 <Button variant="outline" size="sm" className="text-xs gap-1 shrink-0">
                   <Eye className="h-3.5 w-3.5" />
                   معاينة المقال

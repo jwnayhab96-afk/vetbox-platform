@@ -150,7 +150,7 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
 
     setRxSaving(true);
     const rxNumber = `VB-${crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
-    const qrCode = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/verify/rx/${rxNumber}`;
+    const qrCode = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/verify/rx-check?rxNumber=${encodeURIComponent(rxNumber)}`;
     const newItems = validItems.map((it) => ({ id: crypto.randomUUID(), ...it }));
     const { data: row, error } = await createClient().from("prescriptions").insert({
       pet_id: pet.id, owner_id: pet.owner_id, veterinarian_id: vetId,

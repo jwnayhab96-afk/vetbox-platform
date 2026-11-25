@@ -116,7 +116,7 @@ export default function AddPetPage() {
     triggerConfetti();
 
     setLoading(false);
-    router.push(`/owner/pets/${newPet.id}`);
+    router.push(`/owner/pets/detail?id=${encodeURIComponent(newPet.id)}`);
   };
 
   return (

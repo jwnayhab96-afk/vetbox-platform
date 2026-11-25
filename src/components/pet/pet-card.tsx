@@ -115,7 +115,7 @@ export function PetCard({ pet, nextReminder, hasRecentExam = false }: PetCardPro
           </div>
 
           <div className="p-5 pt-0 flex items-center gap-2">
-            <Link href={`/owner/pets/${pet.id}`} className="flex-1">
+            <Link href={`/owner/pets/detail?id=${encodeURIComponent(pet.id)}`} className="flex-1">
               <Button
                 variant="default"
                 className="w-full text-xs font-bold justify-between bg-primary hover:bg-primary-hover text-white shadow-xs rounded-xl transition-all"

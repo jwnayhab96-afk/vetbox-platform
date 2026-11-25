@@ -119,7 +119,7 @@ export default function VetsDirectoryPage() {
                   <span className="text-[11px] font-mono text-muted-foreground">
                     قيد: {vet.license_number}
                   </span>
-                  <Link href={`/veterinarians/${vet.id}`}>
+                  <Link href={`/veterinarians/detail?id=${encodeURIComponent(vet.id)}`}>
                     <Button size="sm" variant="outline" className="text-xs">
                       عرض الملف الشخصي
                     </Button>
