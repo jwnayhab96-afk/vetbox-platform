@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
-import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/shared/logo";
@@ -84,7 +83,6 @@ export default function AboutPage() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

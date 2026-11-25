@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, Plus, Menu, X, Check, ExternalLink } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, Plus, Menu, X, Check, ExternalLink, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
@@ -19,7 +20,10 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle, action, role }: HeaderProps) {
+  const pathname = usePathname();
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   useEffect(() => {
     let active = true;
@@ -34,29 +38,52 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
     return () => { active = false; };
   }, [role]);
   const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const ownerLinks = [
+    { href: "/owner/dashboard", label: "نظرة عامة" },
+    { href: "/owner/pets", label: "حيواناتي" },
+    { href: "/owner/pets/new", label: "إضافة حيوان" },
+    { href: "/owner/reminders", label: "المواعيد والتطعيمات" },
+    { href: "/owner/veterinarians", label: "الأطباء المرتبطون" },
+    { href: "/owner/notifications", label: "التنبيهات" },
+    { href: "/owner/settings", label: "إعدادات الحساب" },
+  ];
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 md:h-20 items-center justify-between border-b border-border/80 bg-background/95 backdrop-blur-md px-4 md:px-8">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-30 relative flex min-h-16 md:h-20 items-center justify-between gap-2 border-b border-border/80 bg-background/95 px-3 py-2 backdrop-blur-md sm:px-4 md:px-8">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">{title}</h1>
-          {subtitle && <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+          <h1 className="truncate text-base font-bold leading-tight text-foreground sm:text-xl md:text-2xl">{title}</h1>
+          {subtitle && <p className="mt-0.5 hidden truncate text-xs text-muted-foreground sm:block md:text-sm">{subtitle}</p>}
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
         {/* Action Button */}
         {action && (
-          <Link href={action.href}>
+          <Link href={action.href} aria-label={action.label} title={action.label}>
             <Button size="sm" className="gap-1.5 shadow-xs text-xs md:text-sm h-9 md:h-10">
               {action.icon || <Plus className="h-4 w-4" />}
-              <span>{action.label}</span>
+              <span className="hidden sm:inline">{action.label}</span>
             </Button>
           </Link>
         )}
 
         {/* Dark / Light Theme Toggle */}
         <ThemeToggle />
+
+        {role === "owner" && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="min-h-11 min-w-11 rounded-xl md:hidden"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
+        )}
 
         {/* Notifications Dropdown */}
         <div className="relative">
@@ -130,6 +157,34 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
           )}
         </div>
       </div>
+
+      {role === "owner" && mobileMenuOpen && (
+        <nav className="absolute inset-x-3 top-full z-[60] mt-2 space-y-1 rounded-2xl border border-border bg-card p-2 text-right shadow-xl md:hidden">
+          {ownerLinks.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                pathname === item.href ? "bg-primary text-white" : "text-foreground hover:bg-muted"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+          <button
+            type="button"
+            onClick={async () => {
+              await createClient().auth.signOut();
+              router.replace("/auth/login");
+            }}
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-500/10"
+          >
+            <LogOut className="h-4 w-4" />
+            تسجيل الخروج
+          </button>
+        </nav>
+      )}
     </header>
   );
 }

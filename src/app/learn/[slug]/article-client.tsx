@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
-import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
@@ -35,7 +34,6 @@ export default function ArticleDetailClient({ slug: propSlug }: { slug?: string 
             <Button variant="outline">العودة لمكتبة المقالات</Button>
           </Link>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -136,7 +134,6 @@ export default function ArticleDetailClient({ slug: propSlug }: { slug?: string 
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

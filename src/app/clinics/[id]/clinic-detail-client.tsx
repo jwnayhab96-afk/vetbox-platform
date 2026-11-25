@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
-import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +37,6 @@ export default function ClinicDetailClient({ id: propId }: { id?: string }) {
             <Button variant="outline">العودة لدليل العيادات</Button>
           </Link>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -179,7 +177,6 @@ export default function ClinicDetailClient({ id: propId }: { id?: string }) {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

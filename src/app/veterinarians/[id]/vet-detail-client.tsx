@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
-import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +58,6 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
             <Button variant="outline">العودة لدليل الأطباء</Button>
           </Link>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -167,7 +165,6 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

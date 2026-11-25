@@ -1,6 +1,5 @@
 import React from "react";
 import { Navbar } from "@/components/shared/navbar";
-import { Footer } from "@/components/shared/footer";
 
 export default function TermsPage() {
   return (
@@ -26,7 +25,6 @@ export default function TermsPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { EmergencySosModal } from "@/components/shared/emergency-sos-modal";
+import { Footer } from "@/components/shared/footer";
 
 export const metadata: Metadata = {
   title: {
@@ -57,6 +58,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen font-sans bg-background text-foreground antialiased selection:bg-primary/10 selection:text-primary">
         {children}
+        <Footer />
         <EmergencySosModal />
       </body>
     </html>

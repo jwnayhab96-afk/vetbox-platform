@@ -218,7 +218,7 @@ export function Footer() {
               {/* Single, Distinctive Founder Name & Role */}
               <div className="space-y-1 text-right lg:text-left">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="font-brand font-black text-2xl sm:text-3xl text-white tracking-tight">
+                  <h3 className="font-editorial italic font-bold text-3xl sm:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-white to-amber-200 tracking-wide drop-shadow-sm">
                     John Ehab
                   </h3>
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold tracking-wide font-sans border border-emerald-400/30">
