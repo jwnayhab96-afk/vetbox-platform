@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
-import { ShieldCheck, Award, UploadCloud, Check, AlertCircle, LoaderCircle } from "lucide-react";
+import { ShieldCheck, Award, UploadCloud, Check, AlertCircle, LoaderCircle, FileText } from "lucide-react";
 
 export default function VetVerificationPage() {
   const [vet, setVet] = useState<any>(null);
@@ -19,6 +19,9 @@ export default function VetVerificationPage() {
   const [experience, setExperience] = useState(0);
   const [education, setEducation] = useState("");
   const [saved, setSaved] = useState(false);
+  const [documentPath, setDocumentPath] = useState<string | null>(null);
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [documentError, setDocumentError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -41,6 +44,7 @@ export default function VetVerificationPage() {
           setLicenseNumber(data.license_number || "");
           setExperience(data.years_of_experience || 0);
           setEducation(data.education || "");
+          setDocumentPath(data.syndicate_card_url || null);
           setLoadError(null);
         }
       } catch (error) {
@@ -52,6 +56,68 @@ export default function VetVerificationPage() {
     void load();
     return () => { active = false; };
   }, []);
+
+  const handleDocumentUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !vet) return;
+
+    const allowedTypes: Record<string, string> = {
+      "application/pdf": "pdf",
+      "image/jpeg": "jpg",
+      "image/png": "png",
+    };
+    const extension = allowedTypes[file.type];
+    if (!extension) {
+      setDocumentError("اختر صورة JPG أو PNG أو ملف PDF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setDocumentError("الحد الأقصى لحجم المستند 5 ميجابايت.");
+      return;
+    }
+
+    setUploadingDocument(true);
+    setDocumentError(null);
+    const supabase = createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user || user.id !== vet.id) {
+      setDocumentError("انتهت جلسة الدخول. سجّل الدخول مجددًا ثم أعد المحاولة.");
+      setUploadingDocument(false);
+      return;
+    }
+
+    const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from("vet-verification-documents")
+      .upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
+
+    if (uploadError) {
+      setDocumentError(uploadError.message);
+      setUploadingDocument(false);
+      return;
+    }
+
+    const { error: profileError } = await supabase
+      .from("veterinarian_profiles")
+      .update({ syndicate_card_url: path, updated_at: new Date().toISOString() })
+      .eq("id", user.id);
+
+    if (profileError) {
+      await supabase.storage.from("vet-verification-documents").remove([path]);
+      setDocumentError(profileError.message);
+      setUploadingDocument(false);
+      return;
+    }
+
+    const previousPath = documentPath;
+    setDocumentPath(path);
+    setVet((current: any) => ({ ...current, syndicate_card_url: path }));
+    if (previousPath && !previousPath.startsWith("http")) {
+      await supabase.storage.from("vet-verification-documents").remove([previousPath]);
+    }
+    setUploadingDocument(false);
+  };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,13 +249,32 @@ export default function VetVerificationPage() {
               {/* Upload Document Box */}
               <div className="space-y-2">
                 <Label>صورة كارنيه النقابة وترخيص مزاولة المهنة</Label>
-                <div className="p-6 border-2 border-dashed border-border/80 rounded-2xl bg-muted/20 text-center space-y-2">
+                <div className="p-5 border-2 border-dashed border-border/80 rounded-2xl bg-muted/20 text-center space-y-3">
+                  <input
+                    id="vet-verification-document"
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf"
+                    className="sr-only"
+                    onChange={handleDocumentUpload}
+                    disabled={uploadingDocument}
+                  />
                   <UploadCloud className="h-8 w-8 text-muted-foreground mx-auto" />
-                  <p className="text-xs text-foreground font-semibold">اسحب الملف هنا أو اضغط للاختيار</p>
-                  <p className="text-[11px] text-muted-foreground">PNG, JPG أو PDF بحد أقصى 5 ميجابايت</p>
-                  <span className="inline-block text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md font-medium border border-emerald-200">
-                    تم رفع ملف كارنيه النقابة والتحقق بنجاح ✓
-                  </span>
+                  <p className="text-xs text-foreground font-semibold">اختر صورة الكارنيه أو ملف الترخيص من جهازك</p>
+                  <p className="text-[11px] text-muted-foreground">PNG أو JPG أو PDF — بحد أقصى 5 ميجابايت</p>
+                  <label
+                    htmlFor="vet-verification-document"
+                    className={`inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white ${uploadingDocument ? "pointer-events-none opacity-60" : "hover:bg-primary-hover"}`}
+                  >
+                    {uploadingDocument && <LoaderCircle className="h-4 w-4 animate-spin" />}
+                    {uploadingDocument ? "جارٍ رفع المستند..." : "اختيار مستند"}
+                  </label>
+                  {documentPath && (
+                    <div className="flex items-center justify-center gap-2 text-xs font-medium text-emerald-700">
+                      <FileText className="h-4 w-4" />
+                      <span>تم رفع المستند — بانتظار مراجعة الإدارة</span>
+                    </div>
+                  )}
+                  {documentError && <p role="alert" className="text-xs text-rose-700">تعذر رفع المستند: {documentError}</p>}
                 </div>
               </div>
 

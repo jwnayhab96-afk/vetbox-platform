@@ -19,9 +19,8 @@ import {
   XCircle,
   Clock,
   ChevronLeft,
-  Calendar,
   AlertCircle,
-  Building,
+  LoaderCircle,
 } from "lucide-react";
 
 export default function VetDashboardPage() {
@@ -29,22 +28,54 @@ export default function VetDashboardPage() {
   const [vet, setVet] = useState<any>(null);
   const [links, setLinks] = useState<any[]>([]);
   const [visits, setVisits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [dataWarning, setDataWarning] = useState<string | null>(null);
 
   const load = async (userId: string) => {
-    const supabase = createClient();
-    const [vetResult, linkResult, visitResult] = await Promise.all([
-      supabase.from("veterinarian_profiles").select("*, profile:profiles(*)").eq("id", userId).single(),
-      supabase.from("pet_vet_links").select("*, pet:pets(*)").eq("vet_id", userId).order("created_at", { ascending: false }),
-      supabase.from("medical_visits").select("*").eq("vet_id", userId).order("visit_date", { ascending: false }),
-    ]);
-    if (vetResult.data) setVet(vetResult.data);
-    setLinks(linkResult.data || []); setVisits(visitResult.data || []);
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const supabase = createClient();
+      const [vetResult, linkResult, visitResult] = await Promise.all([
+        supabase.from("veterinarian_profiles").select("*, profile:profiles(*)").eq("id", userId).single(),
+        supabase.from("pet_vet_links").select("*, pet:pets(*)").eq("vet_id", userId).order("created_at", { ascending: false }),
+        supabase.from("medical_visits").select("*").eq("vet_id", userId).order("visit_date", { ascending: false }),
+      ]);
+      if (vetResult.error) throw vetResult.error;
+      if (!vetResult.data) throw new Error("ملف الطبيب غير موجود في قاعدة البيانات.");
+
+      setVet(vetResult.data);
+      setLinks(linkResult.data || []);
+      setVisits(visitResult.data || []);
+      const secondaryError = linkResult.error || visitResult.error;
+      setDataWarning(secondaryError ? `تعذر تحميل بعض بيانات اللوحة: ${secondaryError.message}` : null);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : "تعذر تحميل لوحة الطبيب.");
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => {
-    createClient().auth.getUser().then(({ data: { user } }) => {
-      if (!user) { window.location.assign("/auth/login"); return; }
-      setVetId(user.id); load(user.id);
-    });
+    let active = true;
+    const initialize = async () => {
+      try {
+        const { data: { user }, error } = await createClient().auth.getUser();
+        if (!user) { window.location.assign("/auth/login"); return; }
+        if (error) throw error;
+        if (active) {
+          setVetId(user.id);
+          await load(user.id);
+        }
+      } catch (error) {
+        if (active) {
+          setLoadError(error instanceof Error ? error.message : "تعذر التحقق من جلسة الطبيب.");
+          setLoading(false);
+        }
+      }
+    };
+    void initialize();
+    return () => { active = false; };
   }, []);
 
   const pendingRequests = links.filter((l) => l.status === "pending");
@@ -55,22 +86,64 @@ export default function VetDashboardPage() {
     await load(vetId);
   };
 
-  if (!vet) return null;
+  const pageHeader = (
+    <Header
+      title={vet ? `مرحباً، ${vet.profile?.full_name || ""}` : "لوحة الطبيب"}
+      subtitle={vet ? `بوابة الطبيب البيطري${vet.clinic_affiliation_name ? ` • ${vet.clinic_affiliation_name}` : ""}` : "إدارة المرضى والطلبات المهنية"}
+      role="veterinarian"
+      action={{
+        label: "تسجيل كشف سريري جديد",
+        href: "/veterinarian/visits/new",
+        icon: <Plus className="h-4 w-4" />,
+      }}
+    />
+  );
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        {pageHeader}
+        <div className="flex flex-1 items-center justify-center gap-3 p-8 text-sm text-muted-foreground">
+          <LoaderCircle className="h-5 w-5 animate-spin text-primary" />
+          جاري تحميل لوحة الطبيب...
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError || !vet) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        {pageHeader}
+        <div className="w-full max-w-3xl p-4 md:p-8">
+          <Card className="border-rose-200 bg-rose-50/70">
+            <CardContent className="flex items-start gap-3 p-5 text-right text-sm text-rose-800">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div className="space-y-3">
+                <p className="font-semibold">تعذر تحميل بيانات لوحة الطبيب.</p>
+                <p dir="ltr" className="break-words text-xs">{loadError || "ملف الطبيب غير موجود."}</p>
+                <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+                  إعادة المحاولة
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      <Header
-        title={`مرحباً، ${vet.profile?.full_name || ""}`}
-        subtitle={`بوابة الطبيب البيطري${vet.clinic_affiliation_name ? ` • ${vet.clinic_affiliation_name}` : ""}`}
-        role="veterinarian"
-        action={{
-          label: "تسجيل كشف سريري جديد",
-          href: "/veterinarian/visits/new",
-          icon: <Plus className="h-4 w-4" />,
-        }}
-      />
+      {pageHeader}
 
       <div className="p-4 md:p-8 space-y-8 max-w-7xl">
+        {dataWarning && (
+          <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{dataWarning}</span>
+          </div>
+        )}
         {/* Verification Status Banner */}
         <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-right ${vet.verification_status === "verified" ? "bg-emerald-50 border-emerald-200/80" : "bg-amber-50 border-amber-200/80"}`}>
           <div className="flex items-center gap-3">

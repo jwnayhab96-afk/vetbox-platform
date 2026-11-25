@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
-import { ShieldCheck, CheckCircle2, XCircle, Search, Clock, Award } from "lucide-react";
+import { ShieldCheck, CheckCircle2, XCircle, Search, Clock, Award, FileText } from "lucide-react";
 
 export default function AdminVeterinariansPage() {
   const [vets, setVets] = useState<any[]>([]);
@@ -25,6 +25,20 @@ export default function AdminVeterinariansPage() {
     const { error } = await createClient().rpc("review_veterinarian", { target_vet_id: vetId, new_status: status, reason });
     if (error) { window.alert(error.message); return; }
     await loadVeterinarians();
+  };
+
+  const openVerificationDocument = async (path: string) => {
+    const preview = window.open("about:blank", "_blank");
+    const { data, error } = await createClient()
+      .storage.from("vet-verification-documents")
+      .createSignedUrl(path, 60);
+    if (error || !data?.signedUrl) {
+      preview?.close();
+      window.alert(error?.message || "تعذر فتح مستند الترخيص.");
+      return;
+    }
+    if (preview) preview.location.href = data.signedUrl;
+    else window.location.assign(data.signedUrl);
   };
 
   const filtered = vets.filter((v) => {
@@ -96,6 +110,20 @@ export default function AdminVeterinariansPage() {
               </div>
 
               <p className="text-xs text-muted-foreground line-clamp-2">{vet.bio}</p>
+
+              {vet.syndicate_card_url ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => openVerificationDocument(vet.syndicate_card_url)}
+                >
+                  <FileText className="ml-1 h-3.5 w-3.5" />
+                  معاينة مستند الترخيص
+                </Button>
+              ) : (
+                <p className="text-center text-xs text-amber-700">لم يرفع الطبيب مستند الترخيص بعد.</p>
+              )}
 
               <div className="pt-3 border-t border-border/60 flex items-center justify-between gap-2">
                 {vet.verification_status !== "verified" && (
