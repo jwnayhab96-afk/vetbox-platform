@@ -9,29 +9,48 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
-import { ShieldCheck, Award, FileCheck, UploadCloud, Clock, Check } from "lucide-react";
+import { ShieldCheck, Award, UploadCloud, Check, AlertCircle, LoaderCircle } from "lucide-react";
 
 export default function VetVerificationPage() {
   const [vet, setVet] = useState<any>(null);
-  const [vetId, setVetId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [licenseNumber, setLicenseNumber] = useState("");
   const [experience, setExperience] = useState(0);
   const [education, setEducation] = useState("");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const load = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.assign("/auth/login"); return; }
-      setVetId(user.id);
-      const { data, error } = await supabase.from("veterinarian_profiles").select("*").eq("id", user.id).single();
-      if (!error && data) {
-        setVet(data); setLicenseNumber(data.license_number || "");
-        setExperience(data.years_of_experience || 0); setEducation(data.education || "");
+      try {
+        const supabase = createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (!user) {
+          if (active) window.location.assign("/auth/login");
+          return;
+        }
+        if (authError) throw authError;
+
+        const { data, error } = await supabase.from("veterinarian_profiles").select("*").eq("id", user.id).single();
+        if (error) throw error;
+        if (!data) throw new Error("ملف الطبيب غير موجود في قاعدة البيانات.");
+
+        if (active) {
+          setVet(data);
+          setLicenseNumber(data.license_number || "");
+          setExperience(data.years_of_experience || 0);
+          setEducation(data.education || "");
+          setLoadError(null);
+        }
+      } catch (error) {
+        if (active) setLoadError(error instanceof Error ? error.message : "تعذر تحميل بيانات اعتماد الطبيب.");
+      } finally {
+        if (active) setLoading(false);
       }
     };
-    load();
+    void load();
+    return () => { active = false; };
   }, []);
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -45,15 +64,51 @@ export default function VetVerificationPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  if (!vet) return null;
+  const pageHeader = (
+    <Header
+      title="اعتماد ترخيص مزاولة المهنة والنقابة"
+      subtitle="توثيق الحساب المهني وفقاً للوائح النقابة العامة للأطباء البيطريين"
+      role="veterinarian"
+    />
+  );
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        {pageHeader}
+        <div className="flex flex-1 items-center justify-center gap-3 p-8 text-sm text-muted-foreground">
+          <LoaderCircle className="h-5 w-5 animate-spin text-primary" />
+          جاري تحميل بيانات الاعتماد...
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError || !vet) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        {pageHeader}
+        <div className="w-full max-w-3xl p-4 md:p-8">
+          <Card className="border-rose-200 bg-rose-50/70">
+            <CardContent className="flex items-start gap-3 p-5 text-right text-sm text-rose-800">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div className="space-y-3">
+                <p className="font-semibold">تعذر تحميل بيانات اعتماد الطبيب.</p>
+                <p dir="ltr" className="break-words text-xs">{loadError || "ملف الطبيب غير موجود."}</p>
+                <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+                  إعادة المحاولة
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      <Header
-        title="اعتماد ترخيص مزاولة المهنة والنقابة"
-        subtitle="توثيق الحساب المهني وفقاً للوائح النقابة العامة للأطباء البيطريين"
-        role="veterinarian"
-      />
+      {pageHeader}
 
       <div className="p-4 md:p-8 space-y-6 max-w-4xl">
         {/* Verification Status Card */}

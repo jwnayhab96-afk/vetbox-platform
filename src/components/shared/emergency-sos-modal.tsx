@@ -106,16 +106,16 @@ export function EmergencySosModal() {
       {/* Floating Emergency SOS Beacon */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 z-40 group flex items-center gap-2.5 px-4 py-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-xl hover:shadow-2xl hover:shadow-rose-600/30 transition-all duration-300 hover:scale-105 select-none focus:outline-none focus:ring-4 focus:ring-rose-500/30"
+        className="fixed bottom-4 left-4 z-40 group flex h-12 w-12 items-center justify-center gap-2.5 rounded-full bg-rose-600 p-0 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:bg-rose-700 hover:shadow-2xl hover:shadow-rose-600/30 select-none focus:outline-none focus:ring-4 focus:ring-rose-500/30 sm:bottom-6 sm:left-6 sm:h-auto sm:w-auto sm:px-4 sm:py-3"
         aria-label="طوارئ بيطرية سريعة 24/7"
         title="طوارئ بيطرية سريعة 24/7"
       >
-        <span className="relative flex h-3 w-3">
+        <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 sm:relative sm:inset-auto">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
           <span className="relative inline-flex rounded-full h-3 w-3 bg-white" />
         </span>
-        <AlertTriangle className="h-4 w-4" />
-        <span className="font-bold text-xs tracking-wide font-brand uppercase">SOS طوارئ 24/7</span>
+        <AlertTriangle className="h-5 w-5 sm:h-4 sm:w-4" />
+        <span className="hidden font-bold text-xs tracking-wide font-brand uppercase sm:inline">SOS طوارئ 24/7</span>
       </button>
 
       {/* Emergency Modal Dialog */}

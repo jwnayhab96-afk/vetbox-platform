@@ -38,7 +38,8 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
     return () => { active = false; };
   }, [role]);
   const unreadCount = notifications.filter((n) => !n.is_read).length;
-  const ownerLinks = [
+  const navLinks = {
+    owner: [
     { href: "/owner/dashboard", label: "نظرة عامة" },
     { href: "/owner/pets", label: "حيواناتي" },
     { href: "/owner/pets/new", label: "إضافة حيوان" },
@@ -46,7 +47,26 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
     { href: "/owner/veterinarians", label: "الأطباء المرتبطون" },
     { href: "/owner/notifications", label: "التنبيهات" },
     { href: "/owner/settings", label: "إعدادات الحساب" },
-  ];
+    ],
+    veterinarian: [
+      { href: "/veterinarian/dashboard", label: "لوحة الطبيب" },
+      { href: "/veterinarian/patients", label: "المرضى والحالات" },
+      { href: "/veterinarian/visits/new", label: "تسجيل كشف" },
+      { href: "/veterinarian/connection-requests", label: "طلبات الربط" },
+      { href: "/veterinarian/verification", label: "اعتماد الترخيص" },
+      { href: "/veterinarian/profile", label: "الملف المهني" },
+      { href: "/veterinarian/settings", label: "الإعدادات" },
+    ],
+    admin: [
+      { href: "/admin/dashboard", label: "لوحة الإدارة" },
+      { href: "/admin/veterinarians", label: "اعتماد الأطباء" },
+      { href: "/admin/users", label: "المستخدمون" },
+      { href: "/admin/clinics", label: "العيادات" },
+      { href: "/admin/articles", label: "المقالات" },
+      { href: "/admin/reports", label: "التقارير" },
+      { href: "/admin/settings", label: "الإعدادات" },
+    ],
+  }[role];
 
   return (
     <header className="sticky top-0 z-30 relative flex min-h-16 md:h-20 items-center justify-between gap-2 border-b border-border/80 bg-background/95 px-3 py-2 backdrop-blur-md sm:px-4 md:px-8">
@@ -69,21 +89,21 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
         )}
 
         {/* Dark / Light Theme Toggle */}
-        <ThemeToggle />
+        <div className="hidden md:block">
+          <ThemeToggle />
+        </div>
 
-        {role === "owner" && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="min-h-11 min-w-11 rounded-xl md:hidden"
-            onClick={() => setMobileMenuOpen((open) => !open)}
-            aria-label={mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
-            aria-expanded={mobileMenuOpen}
-          >
-            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="min-h-11 min-w-11 rounded-xl md:hidden"
+          onClick={() => setMobileMenuOpen((open) => !open)}
+          aria-label={mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
+          aria-expanded={mobileMenuOpen}
+        >
+          {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        </Button>
 
         {/* Notifications Dropdown */}
         <div className="relative">
@@ -158,9 +178,9 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
         </div>
       </div>
 
-      {role === "owner" && mobileMenuOpen && (
-        <nav className="absolute inset-x-3 top-full z-[60] mt-2 space-y-1 rounded-2xl border border-border bg-card p-2 text-right shadow-xl md:hidden">
-          {ownerLinks.map((item) => (
+      {mobileMenuOpen && (
+        <nav className="absolute inset-x-3 top-full z-[60] mt-2 max-h-[calc(100dvh-5rem)] space-y-1 overflow-y-auto rounded-2xl border border-border bg-card p-2 text-right shadow-xl md:hidden">
+          {navLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -172,6 +192,10 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
               {item.label}
             </Link>
           ))}
+          <div className="flex items-center justify-between border-t border-border px-3 py-2.5 text-sm font-semibold text-foreground">
+            <span>المظهر</span>
+            <ThemeToggle />
+          </div>
           <button
             type="button"
             onClick={async () => {

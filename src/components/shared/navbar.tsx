@@ -16,9 +16,6 @@ import {
   Shield,
   User,
   LayoutDashboard,
-  PhoneCall,
-  Clock,
-  Sparkles,
   LogOut,
 } from "lucide-react";
 
@@ -81,7 +78,8 @@ export function Navbar() {
 
       <div className="container flex h-16 md:h-20 items-center justify-between">
         {/* Official Brand Logo (English-only with distinctive font) */}
-        <Logo size="md" subtitle="" />
+        <span className="sm:hidden"><Logo size="sm" subtitle="" /></span>
+        <span className="hidden sm:inline-flex"><Logo size="md" subtitle="" /></span>
 
         {/* Desktop Navigation Links */}
         <nav className="hidden lg:flex items-center gap-1 bg-muted/40 p-1.5 rounded-2xl border border-border/60">
@@ -132,10 +130,9 @@ export function Navbar() {
 
         {/* Mobile Menu Trigger */}
         <div className="flex lg:hidden items-center gap-2">
-          <ThemeToggle />
           <Link href="/owner/dashboard">
-            <Button size="sm" variant="outline" className="text-xs px-2.5 py-1 rounded-lg">
-              لوحتي
+            <Button size="icon" variant="outline" className="h-10 w-10 min-h-10 min-w-10 rounded-xl" aria-label="لوحة المربي" title="لوحة المربي">
+              <LayoutDashboard className="h-4 w-4 text-primary" />
             </Button>
           </Link>
           <button
@@ -151,7 +148,11 @@ export function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-b border-border bg-card px-4 pt-3 pb-6 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="lg:hidden max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-border bg-card px-4 pt-3 pb-5 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between rounded-xl bg-muted/50 px-3 py-2 text-sm font-semibold">
+            <span>المظهر</span>
+            <ThemeToggle />
+          </div>
           <nav className="flex flex-col space-y-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
@@ -199,6 +200,28 @@ export function Navbar() {
               <Shield className="h-3.5 w-3.5" />
               لوحة إدارة المنظومة
             </Link>
+            {authUser ? (
+              <button
+                type="button"
+                onClick={async () => {
+                  await handleSignOut();
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-rose-600 hover:bg-rose-500/10"
+              >
+                <LogOut className="h-4 w-4" />
+                تسجيل الخروج
+              </button>
+            ) : (
+              <Link
+                href="/auth/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-primary text-white font-bold text-sm text-center"
+              >
+                <User className="h-4 w-4" />
+                دخول / تسجيل
+              </Link>
+            )}
           </div>
         </div>
       )}
