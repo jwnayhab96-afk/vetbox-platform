@@ -29,7 +29,6 @@ import { compressPetImage } from "@/lib/image/compress-image";
 
 export default function AddPetPage() {
   const router = useRouter();
-  const [ownerId, setOwnerId] = useState<string | null>(null);
 
   // Multi-step state: 1, 2, 3, 4
   const [step, setStep] = useState(1);
@@ -61,8 +60,7 @@ export default function AddPetPage() {
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data: { user } }) => {
-      if (user) setOwnerId(user.id);
-      else router.replace("/auth/login");
+      if (!user) router.replace("/auth/login");
     });
   }, [router]);
 
@@ -106,7 +104,6 @@ export default function AddPetPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ownerId) { router.replace("/auth/login"); return; }
     setLoading(true);
 
     const speciesAttributes: Record<string, any> = {};
@@ -118,6 +115,14 @@ export default function AddPetPage() {
     }
 
     const supabase = createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      setLoading(false);
+      router.replace("/auth/login");
+      return;
+    }
+    const ownerId = user.id;
+
     let uploadedPhotoPath: string | null = null;
     let uploadedPhotoUrl: string | null = null;
 
