@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { Header } from "@/components/shared/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -137,6 +138,15 @@ export default function VetVerificationPage() {
       role="veterinarian"
     />
   );
+  const isVerified = vet?.verification_status === "verified";
+  const isRejected = vet?.verification_status === "rejected";
+  const statusTitle = isVerified
+    ? "حسابك المهني معتمد رسميًا"
+    : isRejected
+      ? "طلب الاعتماد يحتاج إلى تعديل"
+      : vet?.verification_status === "unverified"
+        ? "أكمل بيانات اعتمادك المهني"
+        : "طلب الاعتماد قيد المراجعة";
 
   if (loading) {
     return (
@@ -178,30 +188,39 @@ export default function VetVerificationPage() {
 
       <div className="p-4 md:p-8 space-y-6 max-w-4xl">
         {/* Verification Status Card */}
-        <Card className={`border shadow-xs ${vet.verification_status === "verified" ? "border-emerald-300 bg-emerald-50/50" : "border-amber-300 bg-amber-50/50"}`}>
+        <Card className={`border shadow-xs ${isVerified ? "border-emerald-300 bg-emerald-50/50" : isRejected ? "border-rose-300 bg-rose-50/50" : "border-amber-300 bg-amber-50/50"}`}>
           <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-right">
             <div className="flex items-center gap-4">
-              <div className={`h-12 w-12 rounded-2xl flex items-center justify-center text-white shrink-0 ${vet.verification_status === "verified" ? "bg-emerald-600" : "bg-amber-600"}`}>
+              <div className={`h-12 w-12 rounded-2xl flex items-center justify-center text-white shrink-0 ${isVerified ? "bg-emerald-600" : isRejected ? "bg-rose-600" : "bg-amber-600"}`}>
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-base text-foreground">
-                    {vet.verification_status === "verified" ? "حساب مهني معتمد رسمياً" : "الطلب قيد المراجعة والتدقيق"}
-                  </h3>
-                  <Badge variant={vet.verification_status === "verified" ? "success" : "warning"} className="text-xs">
-                    {vet.verification_status === "verified" ? "معتمد" : "قيد الفحص"}
+                  <h3 className="font-bold text-base text-foreground">{statusTitle}</h3>
+                  <Badge variant={isVerified ? "success" : isRejected ? "destructive" : vet.verification_status === "unverified" ? "neutral" : "warning"} className="text-xs">
+                    {isVerified ? "معتمد" : isRejected ? "مرفوض ويحتاج تحديثًا" : vet.verification_status === "unverified" ? "غير مكتمل" : "قيد الفحص"}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  رقم ترخيص النقابة: <strong className="font-mono text-foreground">{vet.license_number}</strong>
+                  رقم ترخيص النقابة: <strong className="font-mono text-foreground">{vet.license_number || "غير مسجل"}</strong>
                   {vet.verified_at && ` • تاريخ الاعتماد: ${formatArabicDate(vet.verified_at)}`}
                 </p>
+                {isRejected && vet.rejection_reason && <p className="pt-1 text-xs font-medium text-rose-700">سبب الرفض: {vet.rejection_reason}</p>}
+                {isVerified && <p className="pt-1 text-xs font-medium text-emerald-800">يمكنك الآن استقبال طلبات الربط وتقديم الخدمات الطبية بصفتك طبيبًا معتمدًا.</p>}
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {isVerified ? (
+          <Card className="border-emerald-200 shadow-xs">
+            <CardContent className="flex flex-col gap-4 p-6 text-right sm:flex-row sm:items-center sm:justify-between">
+              <div><h3 className="font-bold text-foreground">اكتمل توثيق ملفك المهني</h3><p className="mt-1 text-sm text-muted-foreground">لن تحتاج إلى إرسال طلب اعتماد آخر ما دام ترخيصك ساريًا.</p></div>
+              <Link href="/veterinarian/dashboard"><Button><Check className="ml-2 h-4 w-4" />الانتقال إلى لوحة الطبيب</Button></Link>
+            </CardContent>
+          </Card>
+        ) : (
+        <>
         {/* Verification Form & Documents */}
         <Card className="border-border shadow-xs">
           <CardHeader className="text-right">
@@ -271,7 +290,7 @@ export default function VetVerificationPage() {
                   {documentPath && (
                     <div className="flex items-center justify-center gap-2 text-xs font-medium text-emerald-700">
                       <FileText className="h-4 w-4" />
-                      <span>تم رفع المستند — بانتظار مراجعة الإدارة</span>
+                      <span>{isRejected ? "تم رفع المستند — راجع سبب الرفض وأعد الإرسال" : "تم رفع المستند — بانتظار مراجعة الإدارة"}</span>
                     </div>
                   )}
                   {documentError && <p role="alert" className="text-xs text-rose-700">تعذر رفع المستند: {documentError}</p>}
@@ -291,6 +310,8 @@ export default function VetVerificationPage() {
             </CardContent>
           </form>
         </Card>
+        </>
+        )}
       </div>
     </div>
   );

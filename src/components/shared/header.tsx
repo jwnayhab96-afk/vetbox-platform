@@ -34,8 +34,9 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
       const { data } = await supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
       if (active) setNotifications(data || []);
     };
-    load();
-    return () => { active = false; };
+    void load();
+    const refreshTimer = window.setInterval(() => { void load(); }, 20_000);
+    return () => { active = false; window.clearInterval(refreshTimer); };
   }, [role]);
   const unreadCount = notifications.filter((n) => !n.is_read).length;
   const navLinks = {
