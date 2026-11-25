@@ -122,6 +122,7 @@ export default function AddPetPage() {
       return;
     }
     const ownerId = user.id;
+    const newPetId = crypto.randomUUID();
 
     let uploadedPhotoPath: string | null = null;
     let uploadedPhotoUrl: string | null = null;
@@ -144,7 +145,8 @@ export default function AddPetPage() {
       uploadedPhotoUrl = supabase.storage.from("pet-photos").getPublicUrl(uploadedPhotoPath).data.publicUrl;
     }
 
-    const { data: newPet, error } = await supabase.from("pets").insert({
+    const { error } = await supabase.from("pets").insert({
+      id: newPetId,
       owner_id: ownerId,
       name,
       species,
@@ -162,9 +164,9 @@ export default function AddPetPage() {
       is_spayed_neutered: isSpayedNeutered,
       species_attributes: speciesAttributes,
       is_deceased: false,
-    }).select("id").single();
+    });
 
-    if (error || !newPet) {
+    if (error) {
       if (uploadedPhotoPath) {
         await supabase.storage.from("pet-photos").remove([uploadedPhotoPath]);
       }
@@ -176,7 +178,7 @@ export default function AddPetPage() {
     triggerConfetti();
 
     setLoading(false);
-    router.push(`/owner/pets/detail?id=${encodeURIComponent(newPet.id)}`);
+    router.push(`/owner/pets/detail?id=${encodeURIComponent(newPetId)}`);
   };
 
   return (
