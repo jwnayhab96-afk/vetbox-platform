@@ -70,10 +70,10 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
   }[role];
 
   return (
-    <header className="sticky top-0 z-30 flex min-h-16 md:h-20 items-center justify-between gap-2 border-b border-border/70 bg-background/95 px-3 py-2 shadow-xs backdrop-blur-md sm:px-4 md:px-8">
+    <header className="sticky top-0 z-30 flex min-h-16 md:h-20 items-center justify-between gap-2 border-b-2 border-border/60 bg-background/95 px-3 py-2 shadow-sm backdrop-blur-md sm:px-4 md:px-8">
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-        <div className="min-w-0 text-right">
-          <h1 className="truncate font-display text-base font-extrabold leading-tight text-foreground sm:text-xl md:text-2xl">{title}</h1>
+        <div className="min-w-0 border-s-4 border-s-primary ps-3 text-right sm:ps-4">
+          <h1 className="line-clamp-2 md:line-clamp-1 font-display text-base font-extrabold leading-tight text-foreground sm:text-xl md:text-2xl">{title}</h1>
           {subtitle && <p className="mt-0.5 hidden truncate text-xs text-muted-foreground sm:block md:text-sm">{subtitle}</p>}
         </div>
       </div>
@@ -82,7 +82,7 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
         {/* Action Button */}
         {action && (
           <Link href={action.href} aria-label={action.label} title={action.label}>
-            <Button size="sm" className="h-11 min-w-11 gap-1.5 rounded-xl px-3 text-xs font-bold shadow-sm transition-all active:scale-95 sm:px-4 md:text-sm">
+            <Button size="sm" className="h-11 min-w-11 gap-1.5 rounded-2xl px-3 text-xs font-bold shadow-md transition-all active:scale-95 sm:px-4 md:text-sm">
               {action.icon || <Plus className="h-4 w-4" />}
               <span className="hidden sm:inline">{action.label}</span>
             </Button>
@@ -98,7 +98,7 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
           type="button"
           variant="outline"
           size="icon"
-          className="h-11 w-11 min-h-11 min-w-11 rounded-xl border-border transition-all active:scale-95 md:hidden"
+          className="h-11 w-11 min-h-11 min-w-11 rounded-2xl border-border bg-card transition-all active:scale-95 md:hidden"
           onClick={() => setMobileMenuOpen((open) => !open)}
           aria-label={mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
           aria-expanded={mobileMenuOpen}
@@ -112,7 +112,7 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
             variant="outline"
             size="icon"
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl border-border transition-all active:scale-95"
+            className="relative h-11 w-11 min-h-[44px] min-w-[44px] rounded-2xl border-border bg-card transition-all active:scale-95"
             aria-label="الإشعارات والتنبيهات"
             aria-expanded={showNotifications}
           >
@@ -202,13 +202,15 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
                 pathname === item.href ? "bg-primary text-white shadow-sm" : "text-foreground hover:bg-muted"
               }`}
             >
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {pathname === item.href && <span className="h-2 w-2 shrink-0 rounded-full bg-white/90" />}
             </Link>
           ))}
           <div className="mt-2 flex min-h-12 items-center justify-between rounded-2xl bg-muted/40 px-4 py-1.5 text-sm font-bold text-foreground">
             <span>المظهر</span>
             <ThemeToggle />
           </div>
+          <div className="my-1 h-px bg-border/60" />
           <button
             type="button"
             onClick={async () => {

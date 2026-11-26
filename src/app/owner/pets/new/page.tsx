@@ -181,43 +181,72 @@ export default function AddPetPage() {
     router.push(`/owner/pets/detail?id=${encodeURIComponent(newPetId)}`);
   };
 
+  const stepClass = (n: number) =>
+    step >= n
+      ? "bg-primary text-primary-foreground border-primary"
+      : "bg-card text-muted-foreground border-border";
+  const stepIcon = (n: number) =>
+    step > n ? (
+      <Check className="h-4 w-4" />
+    ) : step === n ? (
+      <span className="h-3 w-3 rounded-full bg-current animate-pulse" />
+    ) : (
+      <span className="h-3 w-3 rounded-full border-2 border-current opacity-50" />
+    );
+
   return (
-    <div className="flex-1 flex flex-col min-h-screen">
+    <div className="flex-1 flex flex-col min-h-screen bg-muted/20">
       <Header
         title="إضافة حيوان جديد"
         subtitle="إنشاء بطاقة هوية طبية وملف صحي متكامل"
         role="owner"
       />
 
-      <div className="p-4 md:p-8 max-w-3xl mx-auto w-full space-y-6">
+      <div className="p-4 sm:p-6 md:p-8 max-w-3xl mx-auto w-full space-y-5 md:space-y-6">
         {/* Step Progress Indicators */}
-        <div className="grid grid-cols-4 gap-2 text-center text-xs font-semibold">
-          <div className={`p-2.5 rounded-xl border ${step >= 1 ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}>
-            1. الفصيلة والاسم
+        <div className="space-y-3">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${step * 25}%` }} />
           </div>
-          <div className={`p-2.5 rounded-xl border ${step >= 2 ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}>
-            2. العمر والميلاد
-          </div>
-          <div className={`p-2.5 rounded-xl border ${step >= 3 ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}>
-            3. المواصفات والشريحة
-          </div>
-          <div className={`p-2.5 rounded-xl border ${step >= 4 ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}>
-            4. التأكيد والحفظ
+          <div className="grid grid-cols-4 gap-2 text-center text-[11px] sm:text-xs font-bold leading-snug">
+            <div className={`flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-2xl border transition-all ${stepClass(1)} ${step === 1 ? "shadow-md ring-2 ring-primary/30" : ""}`}>
+              {stepIcon(1)}
+              <span>1. الفصيلة والاسم</span>
+            </div>
+            <div className={`flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-2xl border transition-all ${stepClass(2)} ${step === 2 ? "shadow-md ring-2 ring-primary/30" : ""}`}>
+              {stepIcon(2)}
+              <span>2. العمر والميلاد</span>
+            </div>
+            <div className={`flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-2xl border transition-all ${stepClass(3)} ${step === 3 ? "shadow-md ring-2 ring-primary/30" : ""}`}>
+              {stepIcon(3)}
+              <span>3. المواصفات والشريحة</span>
+            </div>
+            <div className={`flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-2xl border transition-all ${stepClass(4)} ${step === 4 ? "shadow-md ring-2 ring-primary/30" : ""}`}>
+              {stepIcon(4)}
+              <span>4. التأكيد والحفظ</span>
+            </div>
           </div>
         </div>
 
-        <Card className="border-border shadow-xs">
+        <Card className="border-border/70 shadow-lg rounded-[2rem] overflow-hidden p-0 gap-0">
           <form onSubmit={handleSubmit}>
             {/* STEP 1: Basic Info & Species */}
             {step === 1 && (
-              <CardContent className="p-6 md:p-8 space-y-5 text-right">
-                <CardHeader className="p-0 pb-4">
-                  <CardTitle className="text-xl">الخطوة 1: المعلومات الأساسية ونوع الفصيلة</CardTitle>
-                  <CardDescription>حدد نوع الحيوان واسمه وسلالته</CardDescription>
+              <CardContent className="p-0 text-right">
+                <CardHeader className="p-5 sm:px-8 sm:py-6 bg-primary/5 border-b border-border/70">
+                  <div className="flex items-start gap-3.5">
+                    <span className="h-12 w-12 shrink-0 rounded-2xl bg-primary text-white flex items-center justify-center shadow-sm">
+                      <PawPrint className="h-6 w-6" />
+                    </span>
+                    <div className="min-w-0 space-y-1">
+                      <CardTitle className="text-lg sm:text-xl leading-snug">الخطوة 1: المعلومات الأساسية ونوع الفصيلة</CardTitle>
+                      <CardDescription>حدد نوع الحيوان واسمه وسلالته</CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
 
-                <div className="space-y-4">
-                  <div>
+                <div className="p-5 sm:p-8 space-y-5">
+                  <div className="space-y-1.5">
                     <Label htmlFor="petName" required>اسم الحيوان</Label>
                     <Input
                       id="petName"
@@ -225,10 +254,11 @@ export default function AddPetPage() {
                       placeholder="مثال: روكي، لونا، زعفرانة..."
                       value={name}
                       onChange={(e) => setName(e.target.value)}
+                      className="h-12 rounded-2xl text-sm"
                     />
                   </div>
 
-                  <div>
+                  <div className="space-y-1.5">
                     <Label required>نوع الحيوان والفصيلة</Label>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 pt-1">
                       {Object.entries(SPECIES_LABELS).map(([key, val]) => (
@@ -236,10 +266,10 @@ export default function AddPetPage() {
                           key={key}
                           type="button"
                           onClick={() => setSpecies(key as any)}
-                          className={`p-3 rounded-xl border text-center text-xs font-medium transition-all ${
+                          className={`min-h-14 p-3 rounded-2xl border-2 text-center text-sm font-bold transition-all active:scale-95 cursor-pointer ${
                             species === key
-                              ? "bg-primary text-primary-foreground border-primary shadow-xs font-semibold ring-2 ring-primary/20"
-                              : "bg-card text-foreground border-border hover:bg-muted"
+                              ? "bg-primary text-primary-foreground border-primary shadow-md ring-4 ring-primary/15"
+                              : "bg-card text-foreground border-border hover:border-primary/50 hover:bg-primary/5"
                           }`}
                         >
                           {val.ar}
@@ -248,23 +278,24 @@ export default function AddPetPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div className="space-y-1.5">
                       <Label htmlFor="breed">السلالة أو النوع (اختياري)</Label>
                       <Input
                         id="breed"
                         placeholder="مثال: جيرمن شيبرد، شيرازي، هافربد..."
                         value={breed}
                         onChange={(e) => setBreed(e.target.value)}
+                        className="h-12 rounded-2xl text-sm"
                       />
                     </div>
-                    <div>
+                    <div className="space-y-1.5">
                       <Label htmlFor="gender" required>الجنس</Label>
                       <select
                         id="gender"
                         value={gender}
                         onChange={(e) => setGender(e.target.value as any)}
-                        className="flex h-10 w-full rounded-lg border border-input bg-card px-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                        className="flex h-12 w-full rounded-2xl border border-input bg-muted/40 px-4 text-sm cursor-pointer transition-colors hover:border-primary/50 focus:ring-2 focus:ring-primary focus:outline-none"
                       >
                         <option value="male">ذكر</option>
                         <option value="female">أنثى</option>
@@ -278,30 +309,37 @@ export default function AddPetPage() {
 
             {/* STEP 2: Age & Birth Date */}
             {step === 2 && (
-              <CardContent className="p-6 md:p-8 space-y-5 text-right">
-                <CardHeader className="p-0 pb-4">
-                  <CardTitle className="text-xl">الخطوة 2: تاريخ الميلاد أو تقدير العمر</CardTitle>
-                  <CardDescription>
-                    إذا كنت لا تعرف تاريخ الميلاد الدقيق، يمكنك إدخال العمر التقديري بالشهور.
-                  </CardDescription>
+              <CardContent className="p-0 text-right">
+                <CardHeader className="p-5 sm:px-8 sm:py-6 bg-primary/5 border-b border-border/70">
+                  <div className="flex items-start gap-3.5">
+                    <span className="h-12 w-12 shrink-0 rounded-2xl bg-primary text-white flex items-center justify-center shadow-sm">
+                      <Calendar className="h-6 w-6" />
+                    </span>
+                    <div className="min-w-0 space-y-1">
+                      <CardTitle className="text-lg sm:text-xl leading-snug">الخطوة 2: تاريخ الميلاد أو تقدير العمر</CardTitle>
+                      <CardDescription>
+                        إذا كنت لا تعرف تاريخ الميلاد الدقيق، يمكنك إدخال العمر التقديري بالشهور.
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
 
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/40 border border-border">
+                <div className="p-5 sm:p-8 space-y-5">
+                  <div className="flex items-center gap-3.5 min-h-14 p-4 rounded-2xl bg-muted/40 border border-border">
                     <input
                       type="checkbox"
                       id="estimateAge"
                       checked={isAgeEstimated}
                       onChange={(e) => setIsAgeEstimated(e.target.checked)}
-                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                      className="h-6 w-6 shrink-0 rounded-lg border-2 border-border text-primary focus:ring-primary cursor-pointer"
                     />
-                    <label htmlFor="estimateAge" className="text-sm font-medium cursor-pointer">
+                    <label htmlFor="estimateAge" className="flex-1 py-1 text-sm font-semibold leading-relaxed cursor-pointer">
                       لا أعرف تاريخ الميلاد الدقيق (أريد إدخال عمر تقريبي)
                     </label>
                   </div>
 
                   {!isAgeEstimated ? (
-                    <div>
+                    <div className="space-y-1.5">
                       <Label htmlFor="birthDate">تاريخ الميلاد الدقيق</Label>
                       <Input
                         id="birthDate"
@@ -309,10 +347,11 @@ export default function AddPetPage() {
                         value={birthDate}
                         onChange={(e) => setBirthDate(e.target.value)}
                         icon={<Calendar className="h-4 w-4" />}
+                        className="h-12 rounded-2xl text-sm"
                       />
                     </div>
                   ) : (
-                    <div>
+                    <div className="space-y-1.5">
                       <Label htmlFor="estMonths">العمر التقديري الحالي (بالشهور)</Label>
                       <Input
                         id="estMonths"
@@ -322,9 +361,10 @@ export default function AddPetPage() {
                         placeholder="مثال: 12 شهر (سنة واحدة)، 6 شهور..."
                         value={estimatedMonths}
                         onChange={(e) => setEstimatedMonths(e.target.value === "" ? "" : Number(e.target.value))}
+                        className="h-12 rounded-2xl text-sm"
                       />
                       {estimatedMonths !== "" && (
-                        <p className="text-xs text-primary font-medium mt-1.5">
+                        <p className="inline-block rounded-full bg-primary/10 px-3.5 py-1.5 text-xs sm:text-sm text-primary font-bold mt-1.5">
                           العمر المحسوب: {calculateAge(null, Number(estimatedMonths))}
                         </p>
                       )}
@@ -336,15 +376,22 @@ export default function AddPetPage() {
 
             {/* STEP 3: Identification & Physical */}
             {step === 3 && (
-              <CardContent className="p-6 md:p-8 space-y-5 text-right">
-                <CardHeader className="p-0 pb-4">
-                  <CardTitle className="text-xl">الخطوة 3: المواصفات، الوزن، والشريحة</CardTitle>
-                  <CardDescription>بيانات الهوية الفردية للمساعدة في التعرف على الحيوان والتسجيل الطبي</CardDescription>
+              <CardContent className="p-0 text-right">
+                <CardHeader className="p-5 sm:px-8 sm:py-6 bg-primary/5 border-b border-border/70">
+                  <div className="flex items-start gap-3.5">
+                    <span className="h-12 w-12 shrink-0 rounded-2xl bg-primary text-white flex items-center justify-center shadow-sm">
+                      <Scale className="h-6 w-6" />
+                    </span>
+                    <div className="min-w-0 space-y-1">
+                      <CardTitle className="text-lg sm:text-xl leading-snug">الخطوة 3: المواصفات، الوزن، والشريحة</CardTitle>
+                      <CardDescription>بيانات الهوية الفردية للمساعدة في التعرف على الحيوان والتسجيل الطبي</CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
 
-                <div className="space-y-4">
+                <div className="p-5 sm:p-8 space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
+                    <div className="space-y-1.5">
                       <Label htmlFor="weight">الوزن الحالي بالكيلوجرام (اختياري)</Label>
                       <Input
                         id="weight"
@@ -354,20 +401,22 @@ export default function AddPetPage() {
                         value={weightKg}
                         onChange={(e) => setWeightKg(e.target.value === "" ? "" : Number(e.target.value))}
                         icon={<Scale className="h-4 w-4" />}
+                        className="h-12 rounded-2xl text-sm"
                       />
                     </div>
-                    <div>
+                    <div className="space-y-1.5">
                       <Label htmlFor="color">اللون والعلامات المميزة</Label>
                       <Input
                         id="color"
                         placeholder="مثال: أبيض ناصع، بني مع أسود..."
                         value={color}
                         onChange={(e) => setColor(e.target.value)}
+                        className="h-12 rounded-2xl text-sm"
                       />
                     </div>
                   </div>
 
-                  <div>
+                  <div className="space-y-1.5">
                     <Label htmlFor="microchip">رقم الشريحة الإلكترونية / Microchip (إن وجد)</Label>
                     <Input
                       id="microchip"
@@ -375,10 +424,11 @@ export default function AddPetPage() {
                       value={microchipNumber}
                       onChange={(e) => setMicrochipNumber(e.target.value)}
                       icon={<QrCode className="h-4 w-4" />}
+                      className="h-12 rounded-2xl text-sm"
                     />
                   </div>
 
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="photo">صورة الحيوان (اختياري)</Label>
                     <input
                       id="photo"
@@ -388,36 +438,36 @@ export default function AddPetPage() {
                       onChange={handlePhotoSelect}
                     />
                     {photoPreview ? (
-                      <div className="flex items-center gap-4 rounded-xl border border-border p-3">
-                        <img src={photoPreview} alt="معاينة صورة الحيوان" className="h-20 w-20 rounded-lg object-cover" />
+                      <div className="flex items-center gap-4 rounded-3xl border border-border bg-card p-3 shadow-sm">
+                        <img src={photoPreview} alt="معاينة صورة الحيوان" className="h-24 w-24 rounded-2xl object-cover" />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{photoFile?.name}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="truncate text-sm font-bold">{photoFile?.name}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
                             تم ضغط الصورة تلقائيًا إلى {((photoFile?.size || 0) / 1024).toFixed(0)} كيلوبايت
                           </p>
                         </div>
-                        <Button type="button" variant="ghost" size="icon" onClick={clearPhoto} aria-label="إزالة الصورة">
-                          <X className="h-4 w-4" />
+                        <Button type="button" variant="ghost" size="icon" onClick={clearPhoto} aria-label="إزالة الصورة" className="h-11 w-11 shrink-0 rounded-2xl">
+                          <X className="h-5 w-5" />
                         </Button>
                       </div>
                     ) : (
-                      <label htmlFor="photo" className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 p-5 text-sm hover:bg-muted/60">
-                        {compressingPhoto ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      <label htmlFor="photo" className="flex cursor-pointer items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 min-h-28 text-sm font-bold text-primary transition-colors hover:bg-primary/10 active:scale-[0.99]">
+                        {compressingPhoto ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
                         <span>{compressingPhoto ? "جارٍ ضغط الصورة..." : "اختر صورة من الجهاز"}</span>
                       </label>
                     )}
                     <p className="text-xs text-muted-foreground">تُحوّل الصورة إلى WebP وتُضغط تلقائيًا قبل رفعها.</p>
                   </div>
 
-                  <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/40 border border-border">
+                  <div className="flex items-center gap-3.5 min-h-14 p-4 rounded-2xl bg-muted/40 border border-border">
                     <input
                       type="checkbox"
                       id="spayed"
                       checked={isSpayedNeutered}
                       onChange={(e) => setIsSpayedNeutered(e.target.checked)}
-                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                      className="h-6 w-6 shrink-0 rounded-lg border-2 border-border text-primary focus:ring-primary cursor-pointer"
                     />
-                    <label htmlFor="spayed" className="text-sm font-medium cursor-pointer">
+                    <label htmlFor="spayed" className="flex-1 py-1 text-sm font-semibold leading-relaxed cursor-pointer">
                       تم إجراء عملية تعقيم / إخصاء (Spayed / Neutered)
                     </label>
                   </div>
@@ -427,75 +477,85 @@ export default function AddPetPage() {
 
             {/* STEP 4: Review & Confirmation */}
             {step === 4 && (
-              <CardContent className="p-6 md:p-8 space-y-6 text-right">
-                <CardHeader className="p-0 pb-2">
-                  <CardTitle className="text-xl">الخطوة 4: مراجعة البيانات وتأكيد الإنشاء</CardTitle>
-                  <CardDescription>تأكد من صحة بيانات الجواز الرقمي قبل الحفظ النهائي</CardDescription>
+              <CardContent className="p-0 text-right">
+                <CardHeader className="p-5 sm:px-8 sm:py-6 bg-primary/5 border-b border-border/70">
+                  <div className="flex items-start gap-3.5">
+                    <span className="h-12 w-12 shrink-0 rounded-2xl bg-primary text-white flex items-center justify-center shadow-sm">
+                      <Sparkles className="h-6 w-6" />
+                    </span>
+                    <div className="min-w-0 space-y-1">
+                      <CardTitle className="text-lg sm:text-xl leading-snug">الخطوة 4: مراجعة البيانات وتأكيد الإنشاء</CardTitle>
+                      <CardDescription>تأكد من صحة بيانات الجواز الرقمي قبل الحفظ النهائي</CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
 
-                <div className="p-5 rounded-2xl bg-muted/30 border border-border/80 space-y-3 text-sm">
-                  <div className="flex justify-between py-1 border-b border-border/50">
-                    <span className="text-muted-foreground">اسم الحيوان:</span>
-                    <strong className="text-foreground">{name}</strong>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-border/50">
-                    <span className="text-muted-foreground">الفصيلة والسلالة:</span>
-                    <span className="text-foreground">{SPECIES_LABELS[species]?.ar} {breed && `(${breed})`}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-border/50">
-                    <span className="text-muted-foreground">الجنس:</span>
-                    <span className="text-foreground">{gender === "male" ? "ذكر" : gender === "female" ? "أنثى" : "غير محدد"}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-border/50">
-                    <span className="text-muted-foreground">العمر:</span>
-                    <span className="text-foreground">
-                      {isAgeEstimated
-                        ? `عمر تقديري (${estimatedMonths || 0} شهر)`
-                        : birthDate
-                        ? birthDate
-                        : "غير محدد"}
-                    </span>
-                  </div>
-                  {weightKg !== "" && (
-                    <div className="flex justify-between py-1 border-b border-border/50">
-                      <span className="text-muted-foreground">الوزن:</span>
-                      <span className="text-foreground">{weightKg} كجم</span>
+                <div className="p-5 sm:p-8 space-y-5">
+                  <div className="px-4 sm:px-5 py-2 rounded-3xl bg-card border border-border/80 shadow-sm text-sm">
+                    <div className="flex items-center justify-between gap-4 py-3.5 border-b border-border/50">
+                      <span className="text-muted-foreground">اسم الحيوان:</span>
+                      <strong className="text-foreground text-base">{name}</strong>
                     </div>
-                  )}
-                  {microchipNumber && (
-                    <div className="flex justify-between py-1 border-b border-border/50">
-                      <span className="text-muted-foreground">الشريحة:</span>
-                      <span className="text-foreground font-mono">{microchipNumber}</span>
+                    <div className="flex items-center justify-between gap-4 py-3.5 border-b border-border/50">
+                      <span className="text-muted-foreground">الفصيلة والسلالة:</span>
+                      <span className="text-foreground font-semibold">{SPECIES_LABELS[species]?.ar} {breed && `(${breed})`}</span>
                     </div>
-                  )}
-                </div>
+                    <div className="flex items-center justify-between gap-4 py-3.5 border-b border-border/50">
+                      <span className="text-muted-foreground">الجنس:</span>
+                      <span className="text-foreground font-semibold">{gender === "male" ? "ذكر" : gender === "female" ? "أنثى" : "غير محدد"}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 py-3.5 border-b border-border/50 last:border-b-0">
+                      <span className="text-muted-foreground">العمر:</span>
+                      <span className="text-foreground font-semibold">
+                        {isAgeEstimated
+                          ? `عمر تقديري (${estimatedMonths || 0} شهر)`
+                          : birthDate
+                          ? birthDate
+                          : "غير محدد"}
+                      </span>
+                    </div>
+                    {weightKg !== "" && (
+                      <div className="flex items-center justify-between gap-4 py-3.5 border-b border-border/50 last:border-b-0">
+                        <span className="text-muted-foreground">الوزن:</span>
+                        <span className="text-foreground font-semibold">{weightKg} كجم</span>
+                      </div>
+                    )}
+                    {microchipNumber && (
+                      <div className="flex items-center justify-between gap-4 py-3.5 border-b border-border/50 last:border-b-0">
+                        <span className="text-muted-foreground">الشريحة:</span>
+                        <span className="text-foreground font-mono font-semibold break-all">{microchipNumber}</span>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary leading-relaxed">
-                  بمجرد إنشاء الملف، ستتمكن من ربطه فوراً بطبيبك البيطري المعتمد لمشاركة السجلات وإضافة التقارير الطبية.
+                  <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/10 border border-primary/20 border-s-4 border-s-primary text-xs sm:text-sm text-primary font-medium leading-relaxed">
+                    <Sparkles className="h-5 w-5 shrink-0 mt-0.5" />
+                    <span>بمجرد إنشاء الملف، ستتمكن من ربطه فوراً بطبيبك البيطري المعتمد لمشاركة السجلات وإضافة التقارير الطبية.</span>
+                  </div>
                 </div>
               </CardContent>
             )}
 
             {/* Navigation buttons */}
-            <div className="p-6 border-t border-border/60 flex items-center justify-between">
+            <div className="p-4 sm:p-6 border-t border-border/60 bg-muted/30 flex items-center justify-between gap-3">
               {step > 1 ? (
-                <Button type="button" variant="outline" onClick={handlePrev} className="gap-1.5">
+                <Button type="button" variant="outline" onClick={handlePrev} className="gap-1.5 min-h-12 px-5 rounded-2xl font-bold shrink-0 active:scale-95 transition-transform">
                   <ChevronRight className="h-4 w-4" />
                   السابق
                 </Button>
               ) : (
-                <Link href="/owner/pets">
-                  <Button type="button" variant="ghost">إلغاء</Button>
+                <Link href="/owner/pets" className="shrink-0">
+                  <Button type="button" variant="ghost" className="min-h-12 px-5 rounded-2xl font-semibold">إلغاء</Button>
                 </Link>
               )}
 
               {step < 4 ? (
-                <Button type="button" onClick={handleNext} className="gap-1.5 font-semibold">
+                <Button type="button" onClick={handleNext} className="gap-1.5 font-bold min-h-12 px-8 rounded-2xl shadow-md flex-1 sm:flex-none active:scale-95 transition-transform">
                   التالي
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button type="submit" className="gap-1.5 font-semibold px-6" isLoading={loading || compressingPhoto}>
+                <Button type="submit" className="gap-1.5 font-bold px-6 min-h-12 h-auto py-3 rounded-2xl shadow-md flex-1 sm:flex-none whitespace-normal active:scale-95 transition-transform" isLoading={loading || compressingPhoto}>
                   <Check className="h-4 w-4" />
                   حفظ وإنشاء بطاقة الهوية الطبية
                 </Button>

@@ -5,32 +5,35 @@ import { ShieldAlert, PhoneCall, Mail, MapPin, ExternalLink, Heart } from "lucid
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-card text-foreground">
+    <footer className="relative overflow-hidden border-t border-border bg-muted/30 text-foreground">
+      <div className="h-1.5 w-full bg-primary" />
       {/* Emergency Notice Banner */}
-      <div className="bg-amber-500/10 border-b border-amber-500/20 border-s-[6px] border-s-amber-500 py-3.5 px-4">
-        <div className="container flex items-center justify-center gap-2 text-xs md:text-sm text-amber-900 dark:text-amber-200 text-center font-semibold leading-relaxed">
-          <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600" />
+      <div className="px-4 pt-6 md:pt-8">
+        <div className="container flex items-start sm:items-center gap-3.5 rounded-3xl border border-amber-500/30 border-s-[6px] border-s-amber-500 bg-amber-500/10 p-4 text-xs md:text-sm text-amber-900 dark:text-amber-200 text-right font-semibold leading-relaxed shadow-sm">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-sm">
+            <ShieldAlert className="h-5 w-5" />
+          </span>
           <span>
             تنبيه طبي: منصة فيت بوكس وسيلة لتنظيم وإدارة السجلات الطبية. في الحالات الحرجة الطارئة يرجى التوجه فوراً لأقرب مستشفى أو عيادة بيطرية مجهزة.
           </span>
         </div>
       </div>
 
-      <div className="container space-y-8 py-8 md:space-y-12 md:py-14">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
+      <div className="container space-y-8 pt-6 pb-8 md:space-y-12 md:pt-10 md:pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 lg:gap-8">
           {/* Brand info & Official Social Channels */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="md:col-span-3 lg:col-span-2 space-y-4">
             <Logo size="lg" subtitle="" />
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
               المنظومة الرقمية الشاملة لربط مربي الحيوانات الأليفة والمواشي بالأطباء والعيادات البيطرية المعتمدة في مصر، وحفظ بطاقة الهوية الطبية والملف الصحي طوال حياة الحيوان.
             </p>
-            <div className="pt-2 flex flex-col space-y-2.5 text-xs sm:text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <span className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><MapPin className="h-4 w-4 text-primary" /></span>
+            <div className="pt-2 flex flex-col gap-2.5 text-xs sm:text-sm text-muted-foreground">
+              <div className="flex items-center gap-3 min-h-12 rounded-2xl border border-border/60 bg-card px-3 py-1.5 shadow-sm">
+                <span className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><MapPin className="h-4 w-4 text-primary" /></span>
                 <span>جمهورية مصر العربية — القاهرة، الجيزة، والإسكندرية</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><Mail className="h-4 w-4 text-primary" /></span>
+              <div className="flex items-center gap-3 min-h-12 rounded-2xl border border-border/60 bg-card px-3 py-1.5 shadow-sm">
+                <span className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><Mail className="h-4 w-4 text-primary" /></span>
                 <a
                   href="mailto:johnehab.m@gmail.com"
                   className="inline-flex min-h-11 items-center hover:text-primary transition-colors font-medium font-sans"
@@ -45,13 +48,13 @@ export function Footer() {
               <span className="text-xs sm:text-sm font-extrabold text-foreground block">
                 تابع VETBOX على منصات التواصل:
               </span>
-              <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap">
                 {/* Facebook */}
                 <a
                   href="https://www.facebook.com/profile.php?id=61587479442053"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-h-11 px-3.5 rounded-xl border border-border/70 bg-muted active:scale-95 hover:bg-[#1877F2] hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5 group cursor-pointer"
+                  className="min-h-12 px-4 rounded-2xl border border-border/70 bg-card shadow-sm active:scale-95 hover:bg-[#1877F2] hover:text-white transition-all text-xs sm:text-sm font-bold flex items-center justify-center sm:justify-start gap-2 group cursor-pointer"
                   title="صفحة VetBox على فيسبوك"
                 >
                   <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -65,7 +68,7 @@ export function Footer() {
                   href="https://www.instagram.com/vetbox_/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-h-11 px-3.5 rounded-xl border border-border/70 bg-muted active:scale-95 hover:bg-gradient-to-tr hover:from-amber-500 hover:via-rose-500 hover:to-purple-600 hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5 group cursor-pointer"
+                  className="min-h-12 px-4 rounded-2xl border border-border/70 bg-card shadow-sm active:scale-95 hover:bg-gradient-to-tr hover:from-amber-500 hover:via-rose-500 hover:to-purple-600 hover:text-white transition-all text-xs sm:text-sm font-bold flex items-center justify-center sm:justify-start gap-2 group cursor-pointer"
                   title="حساب VetBox على انستجرام"
                 >
                   <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -79,7 +82,7 @@ export function Footer() {
                   href="https://www.youtube.com/@vetbox_eg"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-h-11 px-3.5 rounded-xl border border-border/70 bg-muted active:scale-95 hover:bg-[#FF0000] hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5 group cursor-pointer"
+                  className="min-h-12 px-4 rounded-2xl border border-border/70 bg-card shadow-sm active:scale-95 hover:bg-[#FF0000] hover:text-white transition-all text-xs sm:text-sm font-bold flex items-center justify-center sm:justify-start gap-2 group cursor-pointer"
                   title="قناة VetBox على يوتيوب"
                 >
                   <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -93,7 +96,7 @@ export function Footer() {
                   href="https://www.tiktok.com/@vet.box"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-h-11 px-3.5 rounded-xl border border-border/70 bg-muted active:scale-95 hover:bg-black hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5 group cursor-pointer"
+                  className="min-h-12 px-4 rounded-2xl border border-border/70 bg-card shadow-sm active:scale-95 hover:bg-black hover:text-white transition-all text-xs sm:text-sm font-bold flex items-center justify-center sm:justify-start gap-2 group cursor-pointer"
                   title="حساب VetBox على تيك توك"
                 >
                   <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -106,81 +109,93 @@ export function Footer() {
           </div>
 
           {/* Quick links 1 */}
-          <div className="hidden space-y-3 md:block">
-            <h4 className="text-sm font-extrabold text-foreground tracking-wide flex items-center gap-2"><span className="h-4 w-1 rounded-full bg-primary" />الخدمات والاكتشاف</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+          <div className="hidden space-y-4 md:block rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
+            <h4 className="text-base font-extrabold text-foreground tracking-wide flex items-center gap-2.5"><span className="h-5 w-1.5 rounded-full bg-primary" />الخدمات والاكتشاف</h4>
+            <ul className="space-y-1 text-sm text-muted-foreground">
               <li>
-                <Link href="/clinics" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  دليل العيادات والمستشفيات
+                <Link href="/clinics" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>دليل العيادات والمستشفيات</span>
                 </Link>
               </li>
               <li>
-                <Link href="/veterinarians" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  الأطباء البيطريين المعتمدين
+                <Link href="/veterinarians" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>الأطباء البيطريين المعتمدين</span>
                 </Link>
               </li>
               <li>
-                <Link href="/learn" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  موسوعة الرعاية البيطرية
+                <Link href="/learn" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>موسوعة الرعاية البيطرية</span>
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  عن منصة فيت بوكس
+                <Link href="/about" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>عن منصة فيت بوكس</span>
                 </Link>
               </li>
             </ul>
           </div>
 
           {/* Quick links 2 */}
-          <div className="hidden space-y-3 md:block">
-            <h4 className="text-sm font-extrabold text-foreground tracking-wide flex items-center gap-2"><span className="h-4 w-1 rounded-full bg-primary" />للمربين والحيوانات</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+          <div className="hidden space-y-4 md:block rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
+            <h4 className="text-base font-extrabold text-foreground tracking-wide flex items-center gap-2.5"><span className="h-5 w-1.5 rounded-full bg-primary" />للمربين والحيوانات</h4>
+            <ul className="space-y-1 text-sm text-muted-foreground">
               <li>
-                <Link href="/owner/pets/new" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  إضافة حيوان جديد
+                <Link href="/owner/pets/new" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>إضافة حيوان جديد</span>
                 </Link>
               </li>
               <li>
-                <Link href="/owner/dashboard" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  بطاقة الهوية والملف الطبي
+                <Link href="/owner/dashboard" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>بطاقة الهوية والملف الطبي</span>
                 </Link>
               </li>
               <li>
-                <Link href="/owner/reminders" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  مواعيد التطعيمات والجرعات
+                <Link href="/owner/reminders" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>مواعيد التطعيمات والجرعات</span>
                 </Link>
               </li>
               <li>
-                <Link href="/owner/veterinarians" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  ربط الطبيب المعالج
+                <Link href="/owner/veterinarians" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>ربط الطبيب المعالج</span>
                 </Link>
               </li>
             </ul>
           </div>
 
           {/* Quick links 3 */}
-          <div className="hidden space-y-3 md:block">
-            <h4 className="text-sm font-extrabold text-foreground tracking-wide flex items-center gap-2"><span className="h-4 w-1 rounded-full bg-primary" />للأطباء والعيادات</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+          <div className="hidden space-y-4 md:block rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
+            <h4 className="text-base font-extrabold text-foreground tracking-wide flex items-center gap-2.5"><span className="h-5 w-1.5 rounded-full bg-primary" />للأطباء والعيادات</h4>
+            <ul className="space-y-1 text-sm text-muted-foreground">
               <li>
-                <Link href="/veterinarian/dashboard" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  بوابة الطبيب البيطري
+                <Link href="/veterinarian/dashboard" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>بوابة الطبيب البيطري</span>
                 </Link>
               </li>
               <li>
-                <Link href="/veterinarian/verification" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  اعتماد ترخيص النقابة
+                <Link href="/veterinarian/verification" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>اعتماد ترخيص النقابة</span>
                 </Link>
               </li>
               <li>
-                <Link href="/veterinarian/patients" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  إدارة ملفات المرضى
+                <Link href="/veterinarian/patients" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>إدارة ملفات المرضى</span>
                 </Link>
               </li>
               <li>
-                <Link href="/admin/dashboard" className="inline-flex min-h-9 items-center hover:text-primary transition-all">
-                  إدارة النظام
+                <Link href="/admin/dashboard" className="group flex min-h-10 items-center gap-2.5 rounded-xl px-2 -mx-2 hover:bg-primary/5 hover:text-primary transition-all">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/30 transition-colors group-hover:bg-primary" />
+                  <span>إدارة النظام</span>
                 </Link>
               </li>
             </ul>
@@ -188,7 +203,7 @@ export function Footer() {
         </div>
 
         {/* BESPOKE FOUNDER & EXECUTIVE LEADERSHIP SHOWCASE */}
-        <div className="relative overflow-hidden rounded-[2rem] border border-emerald-800/30 bg-gradient-to-br from-[#062017] via-[#082b20] to-[#03130d] p-5 text-white shadow-2xl sm:p-9 md:p-11">
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-emerald-400/20 ring-1 ring-white/5 bg-gradient-to-br from-[#062017] via-[#082b20] to-[#03130d] p-5 text-white shadow-2xl sm:p-9 md:p-11">
           {/* Ambient Lighting & Luxury Watermark */}
           <div className="absolute -top-24 -left-24 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -204,7 +219,7 @@ export function Footer() {
                 <span>FOUNDER&apos;S VISION • رؤية القيادة والمؤسس</span>
               </div>
 
-              <blockquote className="text-base sm:text-lg md:text-xl font-medium text-emerald-50/95 leading-relaxed font-display">
+              <blockquote className="border-s-4 border-emerald-400/40 ps-4 text-base sm:text-lg md:text-xl font-medium text-emerald-50/95 leading-relaxed font-display">
                 &ldquo;الرعاية البيطرية ليست رفاهية، بل مسؤولية وأمانة. أطلقنا VETBOX لنمنح كل كائن في مصر هويته الصحية الموثقة، ونصل بين اهتمام المربي وخبرة الطبيب بأحدث حلول التكنولوجيا الرقمية.&rdquo;
               </blockquote>
 
@@ -237,7 +252,7 @@ export function Footer() {
                   href="https://wa.me/201155278995"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-h-11 px-4 rounded-xl active:scale-95 border border-emerald-400/30 bg-emerald-500/20 hover:bg-emerald-500 hover:text-white text-emerald-200 hover:shadow-lg hover:shadow-emerald-500/20 transition-all text-xs font-semibold flex items-center gap-2 group cursor-pointer"
+                  className="min-h-12 px-5 rounded-2xl active:scale-95 justify-center flex-1 sm:flex-none border border-emerald-400/30 bg-emerald-500/20 hover:bg-emerald-500 hover:text-white text-emerald-200 hover:shadow-lg hover:shadow-emerald-500/20 transition-all text-xs font-semibold flex items-center gap-2 group cursor-pointer"
                   title="WhatsApp"
                 >
                   <svg className="h-4 w-4 fill-current text-emerald-400 group-hover:text-white transition-colors" viewBox="0 0 24 24">
@@ -251,7 +266,7 @@ export function Footer() {
                   href="https://www.facebook.com/john.ehab.morris/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-h-11 px-4 rounded-xl active:scale-95 border border-white/10 bg-white/5 hover:border-[#1877F2]/60 hover:bg-[#1877F2]/20 hover:text-white transition-all text-xs font-semibold flex items-center gap-2 group cursor-pointer"
+                  className="min-h-12 px-5 rounded-2xl active:scale-95 justify-center flex-1 sm:flex-none border border-white/10 bg-white/5 hover:border-[#1877F2]/60 hover:bg-[#1877F2]/20 hover:text-white transition-all text-xs font-semibold flex items-center gap-2 group cursor-pointer"
                   title="Facebook"
                 >
                   <svg className="h-4 w-4 fill-current text-white/70 group-hover:text-[#1877F2] transition-colors" viewBox="0 0 24 24">
@@ -265,7 +280,7 @@ export function Footer() {
                   href="https://www.instagram.com/j.o.h.n_e.h.a.b/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-h-11 px-4 rounded-xl active:scale-95 border border-white/10 bg-white/5 hover:border-rose-500/60 hover:bg-rose-500/20 hover:text-white transition-all text-xs font-semibold flex items-center gap-2 group cursor-pointer"
+                  className="min-h-12 px-5 rounded-2xl active:scale-95 justify-center flex-1 sm:flex-none border border-white/10 bg-white/5 hover:border-rose-500/60 hover:bg-rose-500/20 hover:text-white transition-all text-xs font-semibold flex items-center gap-2 group cursor-pointer"
                   title="Instagram"
                 >
                   <svg className="h-4 w-4 fill-current text-white/70 group-hover:text-rose-400 transition-colors" viewBox="0 0 24 24">
@@ -282,10 +297,10 @@ export function Footer() {
         <div className="pt-5 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-xs text-muted-foreground text-center sm:text-right">
           <p>© {new Date().getFullYear()} VETBOX. جميع الحقوق محفوظة.</p>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
-            <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">
+            <Link href="/privacy" className="inline-flex min-h-11 items-center rounded-full px-4 hover:bg-muted hover:text-foreground transition-colors">
               سياسة الخصوصية
             </Link>
-            <Link href="/terms" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">
+            <Link href="/terms" className="inline-flex min-h-11 items-center rounded-full px-4 hover:bg-muted hover:text-foreground transition-colors">
               شروط الاستخدام
             </Link>
             <span className="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-200/50 dark:border-emerald-800/40 font-medium text-[11px]">
