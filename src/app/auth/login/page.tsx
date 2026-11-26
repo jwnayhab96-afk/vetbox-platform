@@ -126,12 +126,12 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <Card className="rounded-[1.75rem] border-border/70 shadow-2xl shadow-primary/10 overflow-hidden">
+          <Card className="rounded-[2rem] border-border/70 border-t-4 border-t-primary shadow-2xl shadow-primary/10 overflow-hidden">
             <form onSubmit={handleLogin}>
               <CardContent className="p-6 sm:p-8 space-y-5">
                 {errorMessage && (
-                  <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-400 text-xs font-medium flex items-start gap-2.5 leading-relaxed">
-                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
+                  <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/25 border-s-4 border-s-rose-500 text-rose-700 dark:text-rose-400 text-xs sm:text-sm font-semibold flex items-start gap-3 leading-relaxed">
+                    <AlertCircle className="h-5 w-5 shrink-0 text-rose-600" />
                     <span>{errorMessage}</span>
                   </div>
                 )}
@@ -147,14 +147,14 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="example@vetbox.eg"
                     icon={<Mail className="h-4 w-4" />}
-                    className="h-12 rounded-xl bg-muted/40 focus-visible:bg-card"
+                    className="h-12 rounded-2xl bg-muted/40 focus-visible:bg-card"
                   />
                 </div>
 
                 <div className="space-y-2 text-right">
                   <div className="flex items-center justify-between gap-2">
                     <Label htmlFor="password" className="font-bold">كلمة المرور</Label>
-                    <Link href="/auth/forgot-password" className="text-xs font-semibold text-primary hover:underline">
+                    <Link href="/auth/forgot-password" className="inline-flex min-h-11 items-center rounded-xl px-2 -mx-2 text-xs sm:text-sm font-bold text-primary hover:bg-primary/10 hover:underline">
                       نسيت كلمة المرور؟
                     </Link>
                   </div>
@@ -167,13 +167,13 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     icon={<Lock className="h-4 w-4" />}
-                    className="h-12 rounded-xl bg-muted/40 focus-visible:bg-card"
+                    className="h-12 rounded-2xl bg-muted/40 focus-visible:bg-card"
                   />
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full h-12 rounded-xl text-base font-extrabold shadow-lg shadow-primary/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                  className="w-full min-h-12 h-12 rounded-2xl text-base font-extrabold shadow-lg shadow-primary/30 transition-all hover:scale-[1.01] active:scale-[0.98]"
                   isLoading={loading}
                 >
                   تسجيل الدخول
@@ -183,7 +183,7 @@ export default function LoginPage() {
 
             <CardFooter className="px-6 sm:px-8 py-5 border-t border-border/60 bg-muted/30 justify-center text-sm text-muted-foreground">
               <span>ليس لديك حساب بعد؟</span>
-              <Link href="/auth/register" className="mr-1.5 font-extrabold text-primary hover:underline">
+              <Link href="/auth/register" className="mr-1.5 inline-flex min-h-11 items-center rounded-xl px-2 font-extrabold text-primary hover:bg-primary/10 hover:underline">
                 أنشئ حساباً جديداً
               </Link>
             </CardFooter>
