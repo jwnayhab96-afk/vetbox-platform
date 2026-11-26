@@ -41,49 +41,60 @@ export default function OwnerSettingsPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen">
+    <div className="flex-1 flex flex-col min-h-screen bg-muted/20">
       <Header
         title="إعدادات الحساب"
         subtitle="تعديل بيانات الملف الشخصي ووسائل التواصل"
         role="owner"
       />
 
-      <div className="p-4 md:p-8 max-w-2xl space-y-6">
-        <Card className="border-border shadow-xs">
-          <CardHeader>
-            <CardTitle className="text-lg">الملف الشخصي</CardTitle>
+      <div className="p-4 sm:p-6 md:p-8 max-w-2xl w-full space-y-6">
+        <Card className="border-border/70 shadow-lg rounded-[2rem] overflow-hidden p-0 gap-0">
+          <CardHeader className="relative overflow-hidden bg-primary p-5 sm:px-8 sm:py-7 text-white">
+            <div className="pointer-events-none absolute -start-14 -top-16 h-44 w-44 rounded-full bg-white/10" />
+            <div className="pointer-events-none absolute -end-10 -bottom-20 h-48 w-48 rounded-full bg-black/10" />
+            <div className="relative flex items-center gap-4">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/25 bg-white/20 backdrop-blur-sm">
+                <User className="h-7 w-7" />
+              </span>
+              <CardTitle className="text-xl sm:text-2xl font-extrabold text-white">الملف الشخصي</CardTitle>
+            </div>
           </CardHeader>
           <form onSubmit={handleSave}>
-            <CardContent className="space-y-4 text-right">
-              <div>
+            <CardContent className="space-y-5 p-5 sm:p-8 text-right">
+              <div className="space-y-1.5">
                 <Label htmlFor="sName">الاسم بالكامل</Label>
-                <Input id="sName" value={name} onChange={(e) => setName(e.target.value)} />
+                <Input id="sName" value={name} onChange={(e) => setName(e.target.value)} icon={<User className="h-4 w-4" />} className="h-12 rounded-2xl text-sm" />
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label htmlFor="sPhone">رقم الهاتف المحمول</Label>
-                <Input id="sPhone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <Input id="sPhone" value={phone} onChange={(e) => setPhone(e.target.value)} icon={<Phone className="h-4 w-4" />} className="h-12 rounded-2xl text-sm" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
                   <Label htmlFor="sGov">المحافظة</Label>
-                  <Input id="sGov" value={governorate} onChange={(e) => setGovernorate(e.target.value)} />
+                  <Input id="sGov" value={governorate} onChange={(e) => setGovernorate(e.target.value)} icon={<MapPin className="h-4 w-4" />} className="h-12 rounded-2xl text-sm" />
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="sCity">المدينة أو الحي</Label>
-                  <Input id="sCity" value={city} onChange={(e) => setCity(e.target.value)} />
+                  <Input id="sCity" value={city} onChange={(e) => setCity(e.target.value)} icon={<MapPin className="h-4 w-4" />} className="h-12 rounded-2xl text-sm" />
                 </div>
               </div>
 
               {saved && (
-                <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs flex items-center gap-2">
-                  <Check className="h-4 w-4" />
-                  تم حفظ التعديلات بنجاح.
+                <div role="status" className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 border-s-4 border-s-emerald-500 text-emerald-800 text-sm font-semibold flex items-center gap-3 animate-in fade-in">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+                    <Check className="h-4 w-4" />
+                  </span>
+                  <span>تم حفظ التعديلات بنجاح.</span>
                 </div>
               )}
 
-              <Button type="submit" className="font-semibold">
-                حفظ التغييرات
-              </Button>
+              <div className="pt-4 border-t border-border/60">
+                <Button type="submit" className="w-full sm:w-auto min-h-12 px-8 rounded-2xl font-bold shadow-md active:scale-95 transition-transform">
+                  حفظ التغييرات
+                </Button>
+              </div>
             </CardContent>
           </form>
         </Card>

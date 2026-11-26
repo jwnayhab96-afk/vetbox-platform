@@ -31,62 +31,78 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen">
+    <div className="flex-1 flex flex-col min-h-screen bg-muted/20">
       <Header
         title="التنبيهات والإشعارات"
         subtitle="متابعة تحديثات الكشوفات الطبية وطلبات الربط"
         role="owner"
       />
 
-      <div className="p-4 md:p-8 space-y-4 max-w-4xl">
+      <div className="p-4 sm:p-6 md:p-8 space-y-3 md:space-y-4 max-w-4xl w-full">
         {notifications.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl border border-dashed border-border bg-card/60">
-            <Bell className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-foreground">لا توجد تنبيهات حالياً</p>
+          <div className="p-10 sm:p-14 text-center rounded-[2rem] border-2 border-dashed border-primary/25 bg-card">
+            <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-3">
+              <Bell className="h-8 w-8 text-muted-foreground/60" />
+            </div>
+            <p className="text-sm sm:text-base font-semibold text-foreground">لا توجد تنبيهات حالياً</p>
           </div>
         ) : (
           notifications.map((notif) => (
             <Card
               key={notif.id}
-              className={`border transition-all ${
-                notif.is_read ? "bg-card border-border/80" : "bg-primary/5 border-primary/20 shadow-xs"
+              className={`border border-s-[6px] rounded-3xl overflow-hidden p-0 gap-0 transition-all ${
+                notif.is_read
+                  ? "bg-card border-border/70 border-s-border"
+                  : "bg-primary/5 border-primary/20 border-s-amber-500 shadow-md"
               }`}
             >
-              <CardContent className="p-5 flex items-start justify-between gap-4 text-right">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-sm text-foreground">{notif.title}</h4>
-                    {!notif.is_read && (
-                      <span className="h-2 w-2 rounded-full bg-primary" />
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{notif.message}</p>
-                  <span className="text-[10px] text-muted-foreground/80 block pt-1">
-                    {formatArabicDateTime(notif.created_at)}
+              <CardContent className="p-4 sm:p-5 flex flex-col gap-4 text-right">
+                <div className="flex items-start gap-3.5">
+                  <span
+                    className={`h-11 w-11 shrink-0 rounded-2xl flex items-center justify-center ${
+                      notif.is_read ? "bg-muted text-muted-foreground" : "bg-primary text-white shadow-sm"
+                    }`}
+                  >
+                    <Bell className="h-5 w-5" />
                   </span>
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-extrabold text-sm sm:text-base leading-relaxed text-foreground">{notif.title}</h4>
+                      {!notif.is_read && (
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary animate-pulse" />
+                      )}
+                    </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{notif.message}</p>
+                    <span className="inline-block rounded-full bg-muted px-3 py-1 text-[11px] text-muted-foreground font-medium mt-1">
+                      {formatArabicDateTime(notif.created_at)}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  {notif.link && (
-                    <Link href={notif.link}>
-                      <Button variant="outline" size="sm" className="text-xs gap-1">
-                        عرض
-                        <ExternalLink className="h-3 w-3" />
+                {(notif.link || !notif.is_read) && (
+                  <div className="flex items-center gap-2.5 pt-3 border-t border-border/60">
+                    {notif.link && (
+                      <Link href={notif.link} className="flex-1 sm:flex-none">
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto text-sm font-bold gap-2 min-h-11 px-5 rounded-2xl active:scale-95 transition-transform">
+                          عرض
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+                    {!notif.is_read && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleMarkRead(notif.id)}
+                        className="h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-2xl bg-primary/10 text-primary hover:bg-primary/15 active:scale-95 transition-transform"
+                        title="تحديد كمقروء"
+                        aria-label="تحديد كمقروء"
+                      >
+                        <Check className="h-5 w-5" />
                       </Button>
-                    </Link>
-                  )}
-                  {!notif.is_read && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleMarkRead(notif.id)}
-                      className="h-8 w-8 text-primary"
-                      title="تحديد كمقروء"
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))
