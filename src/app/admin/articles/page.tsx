@@ -41,6 +41,7 @@ export default function AdminArticlesPage() {
       slug: String(values.get("slug") || "").trim(),
       summary: String(values.get("summary") || "").trim(),
       body: String(values.get("body") || "").trim(),
+      cover_image_url: String(values.get("cover_image_url") || "").trim() || null,
       category: String(values.get("category") || "general").trim(),
       species_target: String(values.get("species_target") || "all"),
       is_published: values.get("is_published") === "on",
@@ -86,6 +87,7 @@ export default function AdminArticlesPage() {
           <div><Label htmlFor="article-slug">الرابط المختصر (Slug) *</Label><Input id="article-slug" name="slug" required dir="ltr" placeholder="pet-vaccination-guide" defaultValue={editingArticle?.slug || ""} /></div>
           <div><Label htmlFor="article-category">التصنيف *</Label><Input id="article-category" name="category" required defaultValue={editingArticle?.category || ""} /></div>
           <div><Label htmlFor="article-species">الفصيلة المستهدفة</Label><select id="article-species" name="species_target" defaultValue={editingArticle?.species_target || "all"} className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"><option value="all">كل الحيوانات</option><option value="dog">كلاب</option><option value="cat">قطط</option><option value="bird">طيور</option></select></div>
+          <div className="sm:col-span-2"><Label htmlFor="article-cover-image">رابط صورة المقال</Label><Input id="article-cover-image" name="cover_image_url" type="url" dir="ltr" placeholder="https://example.com/article-image.jpg" defaultValue={editingArticle?.cover_image_url || ""} /><p className="mt-1 text-xs text-muted-foreground">اختياري — ستظهر الصورة في بطاقة المقال وصفحته.</p></div>
           <div className="sm:col-span-2"><Label htmlFor="article-summary">ملخص المقال *</Label><Input id="article-summary" name="summary" required defaultValue={editingArticle?.summary || ""} /></div>
           <div className="sm:col-span-2"><Label htmlFor="article-body">محتوى المقال *</Label><textarea id="article-body" name="body" required rows={10} defaultValue={editingArticle?.body || ""} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm" /></div>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="is_published" defaultChecked={editingArticle ? editingArticle.is_published : true} /> نشر المقال</label>
