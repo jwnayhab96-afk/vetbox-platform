@@ -70,10 +70,10 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
   }[role];
 
   return (
-    <header className="sticky top-0 z-30 relative flex min-h-16 md:h-20 items-center justify-between gap-2 border-b border-border/80 bg-background/95 px-3 py-2 backdrop-blur-md sm:px-4 md:px-8">
+    <header className="sticky top-0 z-30 flex min-h-16 md:h-20 items-center justify-between gap-2 border-b border-border/70 bg-background/95 px-3 py-2 shadow-xs backdrop-blur-md sm:px-4 md:px-8">
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-        <div>
-          <h1 className="truncate text-base font-bold leading-tight text-foreground sm:text-xl md:text-2xl">{title}</h1>
+        <div className="min-w-0 text-right">
+          <h1 className="truncate font-display text-base font-extrabold leading-tight text-foreground sm:text-xl md:text-2xl">{title}</h1>
           {subtitle && <p className="mt-0.5 hidden truncate text-xs text-muted-foreground sm:block md:text-sm">{subtitle}</p>}
         </div>
       </div>
@@ -82,7 +82,7 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
         {/* Action Button */}
         {action && (
           <Link href={action.href} aria-label={action.label} title={action.label}>
-            <Button size="sm" className="gap-1.5 shadow-xs text-xs md:text-sm h-9 md:h-10">
+            <Button size="sm" className="h-11 min-w-11 gap-1.5 rounded-xl px-3 text-xs font-bold shadow-sm transition-all active:scale-95 sm:px-4 md:text-sm">
               {action.icon || <Plus className="h-4 w-4" />}
               <span className="hidden sm:inline">{action.label}</span>
             </Button>
@@ -98,12 +98,12 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
           type="button"
           variant="outline"
           size="icon"
-          className="min-h-11 min-w-11 rounded-xl md:hidden"
+          className="h-11 w-11 min-h-11 min-w-11 rounded-xl border-border transition-all active:scale-95 md:hidden"
           onClick={() => setMobileMenuOpen((open) => !open)}
           aria-label={mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
           aria-expanded={mobileMenuOpen}
         >
-          {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
 
         {/* Notifications Dropdown */}
@@ -112,40 +112,50 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
             variant="outline"
             size="icon"
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative rounded-xl border-border min-h-[44px] min-w-[44px]"
+            className="relative h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl border-border transition-all active:scale-95"
             aria-label="الإشعارات والتنبيهات"
             aria-expanded={showNotifications}
           >
-            <Bell className="h-4 w-4 text-foreground" />
+            <Bell className="h-5 w-5 text-foreground" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white shadow-xs">
+              <span className="absolute -top-1.5 -end-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-extrabold text-white shadow-sm ring-2 ring-background">
                 {unreadCount}
               </span>
             )}
           </Button>
 
           {showNotifications && (
-            <div className="absolute left-0 mt-2 w-80 md:w-96 rounded-2xl border border-border bg-card p-4 shadow-xl z-50 text-right animate-in fade-in slide-in-from-top-2">
-              <div className="flex items-center justify-between pb-3 border-b border-border">
-                <span className="font-semibold text-sm text-foreground">الإشعارات والتنبيهات</span>
-                <span className="text-xs text-muted-foreground">{unreadCount} غير مقروء</span>
+            <div className="absolute left-0 top-full z-50 mt-2 w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden rounded-3xl border border-border/70 bg-card text-right shadow-xl animate-in fade-in slide-in-from-top-2 md:w-96">
+              <div className="flex items-center justify-between gap-2 border-b border-border/70 bg-primary/5 px-4 py-3">
+                <span className="flex min-w-0 items-center gap-2.5 text-sm font-extrabold text-foreground">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
+                    <Bell className="h-4 w-4" />
+                  </span>
+                  <span className="truncate">الإشعارات والتنبيهات</span>
+                </span>
+                <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">{unreadCount} غير مقروء</span>
               </div>
 
-              <div className="py-2 max-h-72 overflow-y-auto space-y-2">
+              <div className="max-h-[min(24rem,60dvh)] space-y-2 overflow-y-auto p-3">
                 {notifications.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-6">لا توجد تنبيهات حالياً.</p>
+                  <div className="flex flex-col items-center gap-3 py-8 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
+                      <Bell className="h-6 w-6 text-muted-foreground/60" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">لا توجد تنبيهات حالياً.</p>
+                  </div>
                 ) : (
                   notifications.map((item) => (
                     <div
                       key={item.id}
-                      className={`p-3 rounded-xl border text-xs transition-colors ${
+                      className={`rounded-2xl border p-3 text-xs transition-colors ${
                         item.is_read
-                          ? "bg-muted/30 border-border/60 text-muted-foreground"
-                          : "bg-primary/5 border-primary/20 text-foreground"
+                          ? "border-border/60 bg-muted/30 text-muted-foreground"
+                          : "border-primary/20 border-s-4 border-s-amber-500 bg-primary/5 text-foreground"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="font-semibold text-foreground text-xs">{item.title}</span>
+                        <span className="text-sm font-bold leading-relaxed text-foreground">{item.title}</span>
                         {!item.is_read && (
                           <button
                             onClick={async () => {
@@ -153,9 +163,10 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
                               if (!error) setNotifications((items) => items.map((n) => n.id === item.id ? { ...n, is_read: true } : n));
                             }}
                             title="تحديد كمقروء"
-                            className="text-primary hover:text-primary-hover"
+                            aria-label="تحديد كمقروء"
+                            className="-m-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 hover:text-primary-hover active:scale-95"
                           >
-                            <Check className="h-3.5 w-3.5" />
+                            <Check className="h-4 w-4" />
                           </button>
                         )}
                       </div>
@@ -164,10 +175,10 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
                         <Link
                           href={item.link}
                           onClick={() => setShowNotifications(false)}
-                          className="mt-2 inline-flex items-center gap-1 text-primary hover:underline font-medium"
+                          className="mt-2.5 inline-flex min-h-10 items-center gap-1.5 rounded-full bg-primary/10 px-3.5 text-xs font-bold text-primary transition-colors hover:bg-primary/15"
                         >
                           عرض التفاصيل
-                          <ExternalLink className="h-3 w-3" />
+                          <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       )}
                     </div>
@@ -180,20 +191,21 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
       </div>
 
       {mobileMenuOpen && (
-        <nav className="absolute inset-x-3 top-full z-[60] mt-2 max-h-[calc(100dvh-5rem)] space-y-1 overflow-y-auto rounded-2xl border border-border bg-card p-2 text-right shadow-xl md:hidden">
+        <nav className="absolute inset-x-3 top-full z-[60] mt-2 max-h-[calc(100dvh-5rem)] space-y-1 overflow-y-auto rounded-3xl border border-border/70 bg-card p-2 text-right shadow-xl animate-in fade-in slide-in-from-top-2 md:hidden">
           {navLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setMobileMenuOpen(false)}
-              className={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
-                pathname === item.href ? "bg-primary text-white" : "text-foreground hover:bg-muted"
+              aria-current={pathname === item.href ? "page" : undefined}
+              className={`flex min-h-12 items-center rounded-2xl px-4 text-sm font-bold transition-all active:scale-[0.98] ${
+                pathname === item.href ? "bg-primary text-white shadow-sm" : "text-foreground hover:bg-muted"
               }`}
             >
               {item.label}
             </Link>
           ))}
-          <div className="flex items-center justify-between border-t border-border px-3 py-2.5 text-sm font-semibold text-foreground">
+          <div className="mt-2 flex min-h-12 items-center justify-between rounded-2xl bg-muted/40 px-4 py-1.5 text-sm font-bold text-foreground">
             <span>المظهر</span>
             <ThemeToggle />
           </div>
@@ -203,7 +215,7 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
               await createClient().auth.signOut();
               router.replace("/auth/login");
             }}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-500/10"
+            className="flex min-h-12 w-full items-center gap-2.5 rounded-2xl px-4 text-sm font-bold text-rose-600 transition-all hover:bg-rose-500/10 active:scale-[0.98] dark:text-rose-400"
           >
             <LogOut className="h-4 w-4" />
             تسجيل الخروج
