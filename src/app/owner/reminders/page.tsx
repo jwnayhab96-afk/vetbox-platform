@@ -134,7 +134,7 @@ export default function RemindersPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen">
+    <div className="flex-1 flex flex-col min-h-screen bg-muted/20">
       <Header
         title="جدول المواعيد والتذكيرات الطبية"
         subtitle="متابعة جرعات التطعيم والأدوية والزيارات ومزامنتها مع تقويم الهاتف"
@@ -146,68 +146,70 @@ export default function RemindersPage() {
         }}
       />
 
-      <div className="p-4 md:p-8 space-y-6 max-w-5xl">
+      <div className="p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 max-w-5xl w-full">
         {/* CALENDAR SYNC BANNER (Feature Highlight) */}
-        <div className="rounded-3xl border border-primary/30 bg-gradient-to-r from-primary/10 via-card to-card p-5 md:p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm">
-              <Smartphone className="h-6 w-6" />
+        <div className="relative overflow-hidden rounded-[2rem] bg-primary text-white shadow-lg p-5 sm:p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5">
+          <div className="pointer-events-none absolute -start-16 -top-20 h-56 w-56 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -end-10 -bottom-24 h-60 w-60 rounded-full bg-black/10" />
+          <div className="relative flex items-start gap-4 min-w-0">
+            <div className="h-14 w-14 rounded-2xl bg-white/20 border border-white/25 backdrop-blur-sm flex items-center justify-center shrink-0">
+              <Smartphone className="h-7 w-7" />
             </div>
-            <div className="text-right space-y-0.5">
-              <h3 className="font-bold text-base text-foreground flex items-center gap-2">
+            <div className="text-right space-y-1.5 min-w-0">
+              <h3 className="font-extrabold text-base sm:text-lg text-white flex items-center gap-2 flex-wrap">
                 <span>مزامنة المواعيد مع تقويم هاتفك</span>
-                <Badge variant="success" className="text-[10px] font-bold">تلقائي ومباشر</Badge>
+                <Badge variant="success" className="text-[11px] font-bold">تلقائي ومباشر</Badge>
               </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <p className="text-xs sm:text-sm text-white/85 leading-relaxed">
                 صدّر مواعيد التطعيم والجرعات إلى تقويم Apple Calendar أو Google Calendar للحصول على تنبيهات دورية على هاتفك.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 w-full md:w-auto">
+          <div className="relative flex items-center gap-2.5 w-full md:w-auto shrink-0">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={handleExportAllToIcs}
-              className="gap-2 text-xs font-bold rounded-xl border-border hover:border-primary w-full md:w-auto h-10"
+              className="gap-2 text-xs sm:text-sm font-bold rounded-2xl bg-white text-primary border-white hover:bg-white/90 hover:text-primary w-full md:w-auto min-h-12 px-5 whitespace-normal active:scale-95 transition-transform"
             >
-              <Download className="h-4 w-4 text-primary" />
+              <Download className="h-4 w-4 shrink-0" />
               <span>تصدير لتقويم الهاتف (Apple / iCal)</span>
             </Button>
           </div>
         </div>
 
         {/* Filter Controls & Add Trigger */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 md:gap-4">
+          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-card border border-border/70 shadow-sm w-full sm:w-auto">
             <button
               onClick={() => setFilter("active")}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                filter === "active" ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              className={`flex-1 sm:flex-none min-h-11 px-3 sm:px-5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer active:scale-95 ${
+                filter === "active" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted"
               }`}
             >
               المستحقة ({reminders.filter((r) => !r.is_completed).length})
             </button>
             <button
               onClick={() => setFilter("completed")}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                filter === "completed" ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              className={`flex-1 sm:flex-none min-h-11 px-3 sm:px-5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer active:scale-95 ${
+                filter === "completed" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted"
               }`}
             >
               المكتملة ({reminders.filter((r) => r.is_completed).length})
             </button>
             <button
               onClick={() => setFilter("all")}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                filter === "all" ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              className={`flex-1 sm:flex-none min-h-11 px-3 sm:px-5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer active:scale-95 ${
+                filter === "all" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted"
               }`}
             >
               الكل ({reminders.length})
             </button>
           </div>
 
-          <Button size="sm" onClick={() => setShowAdd(!showAdd)} className="gap-1.5 text-xs h-10 rounded-xl font-bold">
+          <Button size="sm" onClick={() => setShowAdd(!showAdd)} className="gap-2 text-sm min-h-12 px-6 rounded-2xl font-bold shadow-md w-full sm:w-auto active:scale-95 transition-transform">
             <Plus className="h-4 w-4" />
             {showAdd ? "إخفاء النموذج" : "إضافة تذكير مخصص"}
           </Button>
@@ -215,18 +217,23 @@ export default function RemindersPage() {
 
         {/* Add Reminder Inline Form */}
         {showAdd && (
-          <Card className="border-primary/40 bg-card p-6 shadow-md animate-in fade-in space-y-4 rounded-3xl">
-            <h3 className="font-bold text-base text-foreground">إضافة تذكير طبي جديد</h3>
-            <form onSubmit={handleAddReminder} className="space-y-4 text-right">
+          <Card className="border-primary/40 bg-card p-0 gap-0 shadow-lg animate-in fade-in rounded-[2rem] overflow-hidden">
+            <div className="flex items-center gap-3 px-5 sm:px-6 py-4 bg-primary/5 border-b border-border/70">
+              <span className="h-10 w-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0">
+                <Plus className="h-5 w-5" />
+              </span>
+              <h3 className="font-extrabold text-base sm:text-lg text-foreground">إضافة تذكير طبي جديد</h3>
+            </div>
+            <form onSubmit={handleAddReminder} className="space-y-5 text-right p-5 sm:p-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="remPet" required>الحيوان المعني</Label>
                   <select
                     id="remPet"
                     required
                     value={petId}
                     onChange={(e) => setPetId(e.target.value)}
-                    className="flex h-11 w-full rounded-xl border border-input bg-card px-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                    className="flex h-12 w-full rounded-2xl border border-input bg-muted/40 px-4 text-sm cursor-pointer transition-colors hover:border-primary/50 focus:ring-2 focus:ring-primary focus:outline-none"
                   >
                     <option value="">-- اختر الحيوان --</option>
                     {pets.map((p) => (
@@ -234,13 +241,13 @@ export default function RemindersPage() {
                     ))}
                   </select>
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="remType" required>نوع التذكير</Label>
                   <select
                     id="remType"
                     value={reminderType}
                     onChange={(e) => setReminderType(e.target.value)}
-                    className="flex h-11 w-full rounded-xl border border-input bg-card px-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                    className="flex h-12 w-full rounded-2xl border border-input bg-muted/40 px-4 text-sm cursor-pointer transition-colors hover:border-primary/50 focus:ring-2 focus:ring-primary focus:outline-none"
                   >
                     {Object.entries(REMINDER_TYPE_LABELS).map(([k, v]) => (
                       <option key={k} value={k}>{v}</option>
@@ -250,7 +257,7 @@ export default function RemindersPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="remTitle" required>عنوان التذكير أو الجرعة</Label>
                   <Input
                     id="remTitle"
@@ -258,9 +265,10 @@ export default function RemindersPage() {
                     placeholder="مثال: جرعة وقاية القراد، تنشيط السعار..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    className="h-12 rounded-2xl text-sm"
                   />
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="remDate" required>تاريخ الاستحقاق</Label>
                   <Input
                     id="remDate"
@@ -268,15 +276,16 @@ export default function RemindersPage() {
                     required
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
+                    className="h-12 rounded-2xl text-sm"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setShowAdd(false)}>
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-3 border-t border-border/60">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setShowAdd(false)} className="min-h-12 px-6 rounded-2xl font-semibold">
                   إلغاء
                 </Button>
-                <Button type="submit" size="sm" className="font-bold">
+                <Button type="submit" size="sm" className="font-bold min-h-12 px-8 rounded-2xl shadow-md active:scale-95 transition-transform">
                   حفظ التذكير
                 </Button>
               </div>
@@ -285,11 +294,13 @@ export default function RemindersPage() {
         )}
 
         {/* Reminders List */}
-        <div className="space-y-3">
+        <div className="space-y-3 md:space-y-4">
           {filteredReminders.length === 0 ? (
-            <div className="p-12 text-center rounded-3xl border border-dashed border-border bg-card/60">
-              <CalendarCheck className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-foreground">لا توجد مواعيد في هذا التصنيف</p>
+            <div className="p-10 sm:p-14 text-center rounded-[2rem] border-2 border-dashed border-primary/25 bg-card">
+              <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-3">
+                <CalendarCheck className="h-8 w-8 text-muted-foreground/60" />
+              </div>
+              <p className="text-sm sm:text-base font-semibold text-foreground">لا توجد مواعيد في هذا التصنيف</p>
             </div>
           ) : (
             filteredReminders.map((rem) => {
@@ -303,10 +314,10 @@ export default function RemindersPage() {
               return (
                 <div
                   key={rem.id}
-                  className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl border transition-all gap-3 ${
+                  className={`flex flex-col p-4 sm:p-5 rounded-3xl border border-s-[6px] transition-all gap-4 ${
                     rem.is_completed
-                      ? "bg-muted/30 border-border/60 opacity-60"
-                      : "bg-card border-border hover:border-primary/40 shadow-xs"
+                      ? "bg-muted/30 border-border/60 border-s-emerald-500/60 opacity-60"
+                      : "bg-card border-border border-s-amber-500 hover:border-primary/40 hover:shadow-md shadow-sm"
                   }`}
                 >
                   <div className="flex items-start gap-3.5">
@@ -314,76 +325,75 @@ export default function RemindersPage() {
                       type="checkbox"
                       checked={rem.is_completed}
                       onChange={() => handleToggle(rem.id)}
-                      className="mt-1 h-5 w-5 rounded border-border text-primary focus:ring-primary cursor-pointer shrink-0"
+                      className="mt-0.5 h-6 w-6 rounded-lg border-2 border-border text-primary focus:ring-primary cursor-pointer shrink-0"
                       id={`page-rem-${rem.id}`}
                     />
-                    <div className="space-y-1 text-right">
-                      <label
-                        htmlFor={`page-rem-${rem.id}`}
-                        className={`text-sm font-bold cursor-pointer block ${
-                          rem.is_completed ? "line-through text-muted-foreground" : "text-foreground"
-                        }`}
-                      >
-                        {rem.title}
-                      </label>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                        <span className="flex items-center gap-1 font-medium">
+                    <div className="flex-1 min-w-0 space-y-3 text-right">
+                      <div className="flex items-start justify-between gap-3">
+                        <label
+                          htmlFor={`page-rem-${rem.id}`}
+                          className={`text-base font-extrabold cursor-pointer block leading-relaxed ${
+                            rem.is_completed ? "line-through text-muted-foreground" : "text-foreground"
+                          }`}
+                        >
+                          {rem.title}
+                        </label>
+                        <div className="shrink-0">
+                          {rem.is_completed ? (
+                            <Badge variant="success" className="text-xs">
+                              <CheckCircle2 className="h-3.5 w-3.5 ml-1" />
+                              مكتمل
+                            </Badge>
+                          ) : (
+                            <Badge variant="warning" className="text-xs">
+                              <Clock className="h-3.5 w-3.5 ml-1" />
+                              مستحق
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1.5 font-medium rounded-full bg-muted px-3 py-1">
                           <Clock className="h-3.5 w-3.5 text-amber-600" />
                           الموعد: {formatArabicDate(rem.due_date)}
                         </span>
                         {rem.pet_name && (
-                          <span className="font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md text-primary">
+                          <span className="font-bold bg-primary/10 px-3 py-1 rounded-full text-primary">
                             {rem.pet_name}
                           </span>
                         )}
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-[11px]">
                           {REMINDER_TYPE_LABELS[rem.reminder_type] || rem.reminder_type}
                         </Badge>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-end sm:self-center">
-                    {/* Direct Google Calendar Sync */}
-                    {!rem.is_completed && (
-                      <>
-                        <a
-                          href={googleCalUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
-                          title="إضافة إلى تقويم Google"
-                        >
-                          <CalendarIcon className="h-3.5 w-3.5 text-[#4285F4]" />
-                          <span className="hidden md:inline">Google</span>
-                        </a>
+                  {/* Direct Google Calendar Sync */}
+                  {!rem.is_completed && (
+                    <div className="flex items-center gap-2.5 pt-3 border-t border-border/60">
+                      <a
+                        href={googleCalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-2xl border border-border bg-card hover:bg-muted text-sm font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer active:scale-95"
+                        title="إضافة إلى تقويم Google"
+                      >
+                        <CalendarIcon className="h-4 w-4 text-[#4285F4]" />
+                        <span>Google</span>
+                      </a>
 
-                        <button
-                          type="button"
-                          onClick={() => handleSingleExportIcs(rem)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
-                          title="تنزيل لتقويم Apple / iCal"
-                        >
-                          <Download className="h-3.5 w-3.5 text-emerald-600" />
-                          <span className="hidden md:inline">iCal</span>
-                        </button>
-                      </>
-                    )}
-
-                    <div>
-                      {rem.is_completed ? (
-                        <Badge variant="success" className="text-xs">
-                          <CheckCircle2 className="h-3.5 w-3.5 ml-1" />
-                          مكتمل
-                        </Badge>
-                      ) : (
-                        <Badge variant="warning" className="text-xs">
-                          <Clock className="h-3.5 w-3.5 ml-1" />
-                          مستحق
-                        </Badge>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleSingleExportIcs(rem)}
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-2xl border border-border bg-card hover:bg-muted text-sm font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer active:scale-95"
+                        title="تنزيل لتقويم Apple / iCal"
+                      >
+                        <Download className="h-4 w-4 text-emerald-600" />
+                        <span>iCal</span>
+                      </button>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })

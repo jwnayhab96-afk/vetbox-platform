@@ -89,7 +89,7 @@ export default function OwnerDashboardPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen">
+    <div className="flex-1 flex flex-col min-h-screen bg-muted/20">
       <Header
         title={`أهلاً بك${currentProfile?.full_name ? `، ${currentProfile.full_name}` : ""}`}
         subtitle="لوحة المتابعة الصحية والرعاية اليومية لحيواناتك"
@@ -101,28 +101,29 @@ export default function OwnerDashboardPage() {
         }}
       />
 
-      <div className="p-4 md:p-8 space-y-8 max-w-7xl">
-        {/* ACTIVE REMINDERS BANNER IF ANY */}
+      <div className="p-4 sm:p-6 md:p-8 space-y-7 md:space-y-10 max-w-7xl w-full">
+        {/* ACTIVE REMINDERS ALERT */}
         {activeReminders.length > 0 && (
           <FadeIn direction="down" duration={0.4}>
-            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-right shadow-xs">
-              <div className="flex items-center gap-3">
+            <div className="relative overflow-hidden rounded-3xl border border-amber-300/60 border-s-[6px] border-s-amber-500 bg-amber-50 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-right shadow-sm">
+              <div className="pointer-events-none absolute -start-10 -top-10 h-32 w-32 rounded-full bg-amber-400/20" />
+              <div className="relative flex items-center gap-3.5 min-w-0">
                 <PulseGlow color="rgba(245, 158, 11, 0.4)">
-                  <div className="h-10 w-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <Clock className="h-5 w-5" />
+                  <div className="h-12 w-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md">
+                    <Clock className="h-6 w-6" />
                   </div>
                 </PulseGlow>
-                <div>
-                  <span className="font-bold text-sm text-amber-950 block">
+                <div className="min-w-0">
+                  <span className="font-extrabold text-sm sm:text-base text-amber-950 block leading-relaxed">
                     لديك {activeReminders.length} تذكيرات طبية قادمة ومستحقة:
                   </span>
-                  <span className="text-xs text-amber-900/80">
+                  <span className="text-xs sm:text-sm text-amber-900/80 block truncate">
                     {activeReminders[0].title} {activeReminders[0].pet_name && `• لـ ${activeReminders[0].pet_name}`}
                   </span>
                 </div>
               </div>
-              <Link href="/owner/reminders">
-                <Button size="sm" variant="outline" className="text-xs bg-white text-amber-900 border-amber-300 font-bold transition-all hover:scale-105">
+              <Link href="/owner/reminders" className="relative w-full sm:w-auto shrink-0">
+                <Button size="sm" variant="outline" className="w-full sm:w-auto min-h-12 px-5 rounded-xl text-sm bg-white text-amber-900 border-amber-300 font-bold transition-all hover:scale-105 active:scale-95">
                   عرض كل المواعيد
                 </Button>
               </Link>
@@ -130,20 +131,21 @@ export default function OwnerDashboardPage() {
           </FadeIn>
         )}
 
-        {/* QUICK ACTION BAR WITH STAGGER & HOVER */}
-        <StaggerContainer className="grid grid-cols-2 sm:grid-cols-4 gap-3.5" staggerChildren={0.06}>
+        {/* QUICK ACTIONS: APP-STYLE TILES */}
+        <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4" staggerChildren={0.06}>
           <StaggerItem>
             <ScaleOnHover scale={1.03}>
               <Link
                 href="/owner/pets/new"
-                className="p-4 rounded-2xl bg-primary text-white shadow-xs hover:bg-primary-hover transition-all text-right group flex items-center justify-between block"
+                className="relative overflow-hidden rounded-3xl bg-primary text-white shadow-md hover:bg-primary-hover transition-all text-right flex flex-col justify-between gap-5 w-full min-h-[132px] p-4 sm:p-5 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
               >
-                <div>
-                  <span className="text-xs opacity-90 block">إنشاء ملف جديد</span>
-                  <strong className="text-sm md:text-base font-bold block">إضافة حيوان</strong>
+                <div className="pointer-events-none absolute -end-8 -bottom-8 h-28 w-28 rounded-full bg-white/10" />
+                <div className="relative h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                  <Plus className="h-6 w-6" />
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                  <Plus className="h-5 w-5" />
+                <div className="relative min-w-0">
+                  <span className="text-xs opacity-90 block truncate">إنشاء ملف جديد</span>
+                  <strong className="text-base md:text-lg font-extrabold block truncate">إضافة حيوان</strong>
                 </div>
               </Link>
             </ScaleOnHover>
@@ -153,14 +155,14 @@ export default function OwnerDashboardPage() {
             <ScaleOnHover scale={1.03}>
               <Link
                 href="/clinics"
-                className="p-4 rounded-2xl bg-card border border-border hover:border-primary/50 shadow-xs transition-all text-right group flex items-center justify-between block"
+                className="group relative overflow-hidden rounded-3xl bg-card border border-border hover:border-primary/50 shadow-sm hover:shadow-md transition-all text-right flex flex-col justify-between gap-5 w-full min-h-[132px] p-4 sm:p-5 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
-                <div>
-                  <span className="text-xs text-muted-foreground block">أقرب عيادة وطوارئ</span>
-                  <strong className="text-sm md:text-base font-bold text-foreground block">بحث عن عيادة</strong>
+                <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                  <MapPin className="h-6 w-6" />
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <MapPin className="h-5 w-5" />
+                <div className="min-w-0">
+                  <span className="text-xs text-muted-foreground block truncate">أقرب عيادة وطوارئ</span>
+                  <strong className="text-base md:text-lg font-extrabold text-foreground block truncate">بحث عن عيادة</strong>
                 </div>
               </Link>
             </ScaleOnHover>
@@ -170,14 +172,14 @@ export default function OwnerDashboardPage() {
             <ScaleOnHover scale={1.03}>
               <Link
                 href="/veterinarians"
-                className="p-4 rounded-2xl bg-card border border-border hover:border-primary/50 shadow-xs transition-all text-right group flex items-center justify-between block"
+                className="group relative overflow-hidden rounded-3xl bg-card border border-border hover:border-secondary/60 shadow-sm hover:shadow-md transition-all text-right flex flex-col justify-between gap-5 w-full min-h-[132px] p-4 sm:p-5 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
-                <div>
-                  <span className="text-xs text-muted-foreground block">استشارة أو ربط</span>
-                  <strong className="text-sm md:text-base font-bold text-foreground block">طبيب بيطري</strong>
+                <div className="h-12 w-12 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
+                  <Stethoscope className="h-6 w-6" />
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
-                  <Stethoscope className="h-5 w-5" />
+                <div className="min-w-0">
+                  <span className="text-xs text-muted-foreground block truncate">استشارة أو ربط</span>
+                  <strong className="text-base md:text-lg font-extrabold text-foreground block truncate">طبيب بيطري</strong>
                 </div>
               </Link>
             </ScaleOnHover>
@@ -187,97 +189,98 @@ export default function OwnerDashboardPage() {
             <ScaleOnHover scale={1.03}>
               <Link
                 href="/owner/reminders"
-                className="p-4 rounded-2xl bg-card border border-border hover:border-primary/50 shadow-xs transition-all text-right group flex items-center justify-between block"
+                className="group relative overflow-hidden rounded-3xl bg-card border border-border hover:border-amber-400 shadow-sm hover:shadow-md transition-all text-right flex flex-col justify-between gap-5 w-full min-h-[132px] p-4 sm:p-5 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
-                <div>
-                  <span className="text-xs text-muted-foreground block">التطعيمات والجرعات</span>
-                  <strong className="text-sm md:text-base font-bold text-foreground block">جدول المواعيد</strong>
+                <div className="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+                  <CalendarCheck className="h-6 w-6" />
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
-                  <CalendarCheck className="h-5 w-5" />
+                <div className="min-w-0">
+                  <span className="text-xs text-muted-foreground block truncate">التطعيمات والجرعات</span>
+                  <strong className="text-base md:text-lg font-extrabold text-foreground block truncate">جدول المواعيد</strong>
                 </div>
               </Link>
             </ScaleOnHover>
           </StaggerItem>
         </StaggerContainer>
 
-        {/* STATS OVERVIEW CARDS WITH COUNTERS */}
-        <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-4" staggerChildren={0.07}>
-          <StaggerItem>
-            <Card className="border-border/80 shadow-xs rounded-2xl hover:border-primary/40 transition-colors">
-              <CardContent className="p-5 flex items-center justify-between text-right">
-                <div>
-                  <p className="text-xs text-muted-foreground font-semibold">الحيوانات المسجلة</p>
-                  <h3 className="text-2xl font-black text-foreground mt-1">
-                    <AnimatedCounter to={pets.length} duration={1.2} />
-                  </h3>
-                </div>
-                <div className="h-11 w-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+        {/* STATS HERO BAND */}
+        <div className="relative overflow-hidden rounded-[2rem] bg-primary text-white shadow-lg p-4 sm:p-6">
+          <div className="pointer-events-none absolute -start-16 -top-20 h-56 w-56 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -end-12 -bottom-24 h-64 w-64 rounded-full bg-black/10" />
+          <StaggerContainer className="relative grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4" staggerChildren={0.07}>
+            <StaggerItem>
+              <div className="h-full rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm p-4 flex flex-col gap-3 text-right">
+                <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
                   <PawPrint className="h-5 w-5" />
                 </div>
-              </CardContent>
-            </Card>
-          </StaggerItem>
-
-          <StaggerItem>
-            <Card className="border-border/80 shadow-xs rounded-2xl hover:border-amber-400 transition-colors">
-              <CardContent className="p-5 flex items-center justify-between text-right">
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">التذكيرات المستحقة</p>
-                  <h3 className="text-2xl font-black text-amber-600 mt-1">
-                    <AnimatedCounter to={activeReminders.length} duration={1.2} />
+                  <h3 className="text-3xl font-black leading-none">
+                    <AnimatedCounter to={pets.length} duration={1.2} />
                   </h3>
+                  <p className="text-xs sm:text-sm text-white/85 font-semibold mt-1.5">الحيوانات المسجلة</p>
                 </div>
-                <div className="h-11 w-11 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+              </div>
+            </StaggerItem>
+
+            <StaggerItem>
+              <div className="h-full rounded-2xl bg-amber-400/25 border border-amber-200/50 backdrop-blur-sm p-4 flex flex-col gap-3 text-right">
+                <div className="h-10 w-10 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center">
                   <CalendarCheck className="h-5 w-5" />
                 </div>
-              </CardContent>
-            </Card>
-          </StaggerItem>
-
-          <StaggerItem>
-            <Card className="border-border/80 shadow-xs rounded-2xl hover:border-secondary/40 transition-colors">
-              <CardContent className="p-5 flex items-center justify-between text-right">
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">الكشوفات الطبية</p>
-                  <h3 className="text-2xl font-black text-foreground mt-1">
-                    <AnimatedCounter to={allVisits.length} duration={1.2} />
+                  <h3 className="text-3xl font-black leading-none text-amber-100">
+                    <AnimatedCounter to={activeReminders.length} duration={1.2} />
                   </h3>
+                  <p className="text-xs sm:text-sm text-white/85 font-semibold mt-1.5">التذكيرات المستحقة</p>
                 </div>
-                <div className="h-11 w-11 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center">
+              </div>
+            </StaggerItem>
+
+            <StaggerItem>
+              <div className="h-full rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm p-4 flex flex-col gap-3 text-right">
+                <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
                   <Activity className="h-5 w-5" />
                 </div>
-              </CardContent>
-            </Card>
-          </StaggerItem>
-
-          <StaggerItem>
-            <Card className="border-border/80 shadow-xs rounded-2xl hover:border-primary/40 transition-colors">
-              <CardContent className="p-5 flex items-center justify-between text-right">
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">الأطباء المربوطين</p>
-                  <h3 className="text-2xl font-black text-foreground mt-1">
-                    <AnimatedCounter to={connectedLinks.filter((l) => l.status === "accepted").length} duration={1.2} />
+                  <h3 className="text-3xl font-black leading-none">
+                    <AnimatedCounter to={allVisits.length} duration={1.2} />
                   </h3>
+                  <p className="text-xs sm:text-sm text-white/85 font-semibold mt-1.5">الكشوفات الطبية</p>
                 </div>
-                <div className="h-11 w-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+              </div>
+            </StaggerItem>
+
+            <StaggerItem>
+              <div className="h-full rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm p-4 flex flex-col gap-3 text-right">
+                <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
                   <Stethoscope className="h-5 w-5" />
                 </div>
-              </CardContent>
-            </Card>
-          </StaggerItem>
-        </StaggerContainer>
+                <div>
+                  <h3 className="text-3xl font-black leading-none">
+                    <AnimatedCounter to={connectedLinks.filter((l) => l.status === "accepted").length} duration={1.2} />
+                  </h3>
+                  <p className="text-xs sm:text-sm text-white/85 font-semibold mt-1.5">الأطباء المربوطين</p>
+                </div>
+              </div>
+            </StaggerItem>
+          </StaggerContainer>
+        </div>
 
         {/* SECTION: PETS LIST */}
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-foreground font-display">دفتر الحيوانات (بطاقات الهوية والملفات الطبية)</h2>
-              <p className="text-xs text-muted-foreground">الملفات الصحية المعتمدة لكل حيوان من حيواناتك</p>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-11 w-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <PawPrint className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-2xl font-extrabold text-foreground font-display leading-snug">دفتر الحيوانات (بطاقات الهوية والملفات الطبية)</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">الملفات الصحية المعتمدة لكل حيوان من حيواناتك</p>
+              </div>
             </div>
             {pets.length > 0 && (
               <Link href="/owner/pets">
-                <Button variant="ghost" size="sm" className="gap-1 text-xs text-primary font-bold hover:scale-105 transition-transform">
+                <Button variant="ghost" size="sm" className="gap-1 min-h-11 px-4 rounded-full bg-primary/10 text-xs sm:text-sm text-primary font-bold hover:bg-primary/15 hover:scale-105 transition-all">
                   <span>عرض الكل ({pets.length})</span>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -286,21 +289,26 @@ export default function OwnerDashboardPage() {
           </div>
 
           {pets.length === 0 ? (
-            <EmptyState
-              icon={PawPrint}
-              title="لسه مفيش حيوانات مضافة"
-              description="أضف حيوانك الأول لإنشاء دفتر طبي رقمي موثق، وتتبع التطعيمات، وربطه بطبيبك البيطري."
-              action={
-                <Link href="/owner/pets/new">
-                  <Button className="gap-2 rounded-xl font-bold shadow-xs">
-                    <Plus className="h-4 w-4" />
-                    أضف أول حيوان الآن
-                  </Button>
-                </Link>
-              }
-            />
+            <div className="rounded-3xl border-2 border-dashed border-primary/25 bg-card p-2">
+              <EmptyState
+                icon={PawPrint}
+                title="لسه مفيش حيوانات مضافة"
+                description="أضف حيوانك الأول لإنشاء دفتر طبي رقمي موثق، وتتبع التطعيمات، وربطه بطبيبك البيطري."
+                action={
+                  <Link href="/owner/pets/new">
+                    <Button className="gap-2 min-h-12 px-6 rounded-2xl font-bold shadow-md">
+                      <Plus className="h-4 w-4" />
+                      أضف أول حيوان الآن
+                    </Button>
+                  </Link>
+                }
+              />
+            </div>
           ) : (
-            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerChildren={0.08}>
+            <StaggerContainer
+              className="grid grid-flow-col auto-cols-[86%] sm:auto-cols-[48%] gap-4 overflow-x-auto snap-x snap-mandatory pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:pb-0 md:overflow-visible md:grid-flow-row md:auto-cols-auto md:grid-cols-2 lg:grid-cols-3 md:gap-6 [&>*]:snap-center"
+              staggerChildren={0.08}
+            >
               {pets.map((pet) => {
                 const nextRem = reminders.find((r) => r.pet_id === pet.id && !r.is_completed);
                 const hasExam = visits.some((visit) => visit.pet_id === pet.id && visit.author_role === "veterinarian");
@@ -315,49 +323,60 @@ export default function OwnerDashboardPage() {
         </section>
 
         {/* SECTION: UPCOMING REMINDERS & RECENT MEDICAL ACTIVITY */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
           {/* Reminders check list */}
-          <div className="lg:col-span-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
-                <CalendarCheck className="h-5 w-5 text-primary" />
-                <span>جدول التذكيرات القادمة</span>
-              </h3>
-              <Link href="/owner/reminders" className="text-xs text-primary font-bold hover:underline">
-                إدارة المواعيد
-              </Link>
-            </div>
+          <div className="lg:col-span-5">
+            <Card className="border-border/70 shadow-md rounded-3xl overflow-hidden h-full">
+              <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-3 bg-primary/5 border-b border-border/70">
+                <h3 className="font-extrabold text-base sm:text-lg text-foreground flex items-center gap-2.5">
+                  <span className="h-9 w-9 rounded-xl bg-primary text-white flex items-center justify-center shrink-0">
+                    <CalendarCheck className="h-5 w-5" />
+                  </span>
+                  <span>جدول التذكيرات القادمة</span>
+                </h3>
+                <Link href="/owner/reminders" className="text-xs sm:text-sm text-primary font-bold hover:underline inline-flex items-center min-h-11 px-3 rounded-full hover:bg-primary/10 shrink-0 transition-colors">
+                  إدارة المواعيد
+                </Link>
+              </div>
 
-            <Card className="border-border/80 shadow-xs rounded-2xl">
-              <CardContent className="p-4 space-y-2.5">
+              <CardContent className="p-3 sm:p-4 space-y-2.5">
                 {reminders.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-6">لا توجد تذكيرات مسجلة حالياً.</p>
+                  <div className="flex flex-col items-center gap-3 py-10 text-center">
+                    <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center">
+                      <CalendarCheck className="h-7 w-7 text-muted-foreground/60" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">لا توجد تذكيرات مسجلة حالياً.</p>
+                  </div>
                 ) : (
                   reminders.slice(0, 4).map((rem) => (
                     <div
                       key={rem.id}
                       onClick={() => handleToggleReminder(rem.id)}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 text-right hover:border-primary/40 ${
-                        rem.is_completed ? "bg-muted/40 border-border opacity-60" : "bg-card border-border/80 hover:shadow-xs"
+                      className={`p-3.5 min-h-16 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 text-right active:scale-[0.98] ${
+                        rem.is_completed
+                          ? "bg-muted/40 border-border opacity-60"
+                          : "bg-card border-border/80 border-s-4 border-s-amber-500 hover:border-primary/40 hover:shadow-sm"
                       }`}
                     >
                       <button
                         type="button"
-                        className={`h-5 w-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                          rem.is_completed ? "bg-primary border-primary text-white" : "border-border hover:border-primary"
+                        className={`h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          rem.is_completed ? "bg-primary border-primary text-white" : "border-amber-400 hover:border-primary"
                         }`}
                       >
-                        {rem.is_completed && <CheckCircle2 className="h-3.5 w-3.5" />}
+                        {rem.is_completed && <CheckCircle2 className="h-4 w-4" />}
                       </button>
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className={`text-xs font-bold truncate ${rem.is_completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                            {rem.title}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground font-mono">{rem.due_date}</span>
+                        <span className={`text-sm font-bold block truncate ${rem.is_completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                          {rem.title}
+                        </span>
+                        <div className="flex items-center justify-between gap-2 mt-1">
+                          {rem.pet_name ? (
+                            <span className="text-xs text-primary font-semibold truncate">{rem.pet_name}</span>
+                          ) : <span />}
+                          <span className="text-[11px] text-muted-foreground font-mono shrink-0 whitespace-nowrap rounded-full bg-muted px-2.5 py-0.5">{rem.due_date}</span>
                         </div>
-                        {rem.pet_name && <span className="text-[11px] text-primary block mt-0.5 font-medium">{rem.pet_name}</span>}
                       </div>
                     </div>
                   ))
@@ -367,41 +386,57 @@ export default function OwnerDashboardPage() {
           </div>
 
           {/* Recent Visits / Observations Feed */}
-          <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
-                <Activity className="h-5 w-5 text-secondary" />
-                <span>آخر الفحوصات والملاحظات المسجلة</span>
-              </h3>
-            </div>
+          <div className="lg:col-span-7">
+            <Card className="border-border/70 shadow-md rounded-3xl overflow-hidden h-full">
+              <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-3 bg-secondary/10 border-b border-border/70">
+                <h3 className="font-extrabold text-base sm:text-lg text-foreground flex items-center gap-2.5">
+                  <span className="h-9 w-9 rounded-xl bg-secondary text-white flex items-center justify-center shrink-0">
+                    <Activity className="h-5 w-5" />
+                  </span>
+                  <span>آخر الفحوصات والملاحظات المسجلة</span>
+                </h3>
+              </div>
 
-            <Card className="border-border/80 shadow-xs rounded-2xl">
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-4 sm:p-5">
                 {allVisits.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-6">لم يتم تسجيل أي كشوفات أو ملاحظات طبية بعد.</p>
+                  <div className="flex flex-col items-center gap-3 py-10 text-center">
+                    <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center">
+                      <Activity className="h-7 w-7 text-muted-foreground/60" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">لم يتم تسجيل أي كشوفات أو ملاحظات طبية بعد.</p>
+                  </div>
                 ) : (
-                  allVisits.slice(0, 3).map((visit) => {
-                    const petData = pets.find((p) => p.id === visit.pet_id);
-                    return (
-                      <div key={visit.id} className="p-3.5 rounded-xl bg-card border border-border/80 space-y-2 text-right hover:border-primary/40 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Badge variant={visit.author_role === "veterinarian" ? "success" : "secondary"} className="text-[10px]">
-                              {visit.author_role === "veterinarian" ? "فحص سريري موثق" : "ملاحظة مربي"}
-                            </Badge>
-                            <span className="text-xs font-bold text-foreground">{petData?.name}</span>
+                  <div className="border-s-2 border-border ps-5 space-y-5 ms-1.5">
+                    {allVisits.slice(0, 3).map((visit) => {
+                      const petData = pets.find((p) => p.id === visit.pet_id);
+                      return (
+                        <div key={visit.id} className="relative">
+                          <span
+                            className={`absolute -start-[27px] top-5 h-3 w-3 rounded-full ring-4 ring-card ${
+                              visit.author_role === "veterinarian" ? "bg-emerald-500" : "bg-secondary"
+                            }`}
+                          />
+                          <div className="p-4 rounded-2xl bg-card border border-border/80 shadow-xs space-y-3 text-right hover:border-primary/40 hover:shadow-sm transition-all">
+                            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Badge variant={visit.author_role === "veterinarian" ? "success" : "secondary"} className="text-[11px] shrink-0">
+                                  {visit.author_role === "veterinarian" ? "فحص سريري موثق" : "ملاحظة مربي"}
+                                </Badge>
+                                <span className="text-sm font-extrabold text-foreground truncate">{petData?.name}</span>
+                              </div>
+                              <span className="text-xs text-muted-foreground rounded-full bg-muted px-2.5 py-1">{formatArabicDate(visit.visit_date)}</span>
+                            </div>
+                            <p className="text-sm text-foreground font-medium leading-relaxed">{visit.visit_reason || visit.presenting_complaints}</p>
+                            {visit.diagnosis && (
+                              <div className="text-xs sm:text-sm leading-relaxed text-emerald-900 bg-emerald-50 p-3 rounded-xl border border-emerald-200 border-s-4 border-s-emerald-500">
+                                <strong>التشخيص المعتمد: </strong> {visit.diagnosis}
+                              </div>
+                            )}
                           </div>
-                          <span className="text-[11px] text-muted-foreground">{formatArabicDate(visit.visit_date)}</span>
                         </div>
-                        <p className="text-xs text-foreground font-medium">{visit.visit_reason || visit.presenting_complaints}</p>
-                        {visit.diagnosis && (
-                          <div className="text-[11px] text-emerald-800 bg-emerald-50 p-2 rounded-lg border border-emerald-200">
-                            <strong>التشخيص المعتمد: </strong> {visit.diagnosis}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 )}
               </CardContent>
             </Card>

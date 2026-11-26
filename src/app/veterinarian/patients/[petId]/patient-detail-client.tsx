@@ -15,6 +15,7 @@ import { calculateAge, formatArabicDate, SPECIES_LABELS } from "@/lib/utils";
 import { PrescriptionModal } from "@/components/medical/prescription-modal";
 import { Prescription, PrescriptionItem } from "@/lib/types/database.types";
 import { Textarea } from "@/components/ui/textarea";
+import { VACCINE_CATALOG } from "@/lib/data/vaccine-catalog";
 import {
   Stethoscope,
   Plus,
@@ -63,8 +64,11 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
 
   // Quick vaccine recording modal
   const [showVaccineModal, setShowVaccineModal] = useState(false);
+  const [selectedVaccineId, setSelectedVaccineId] = useState("");
   const [vacName, setVacName] = useState("");
   const [vacTarget, setVacTarget] = useState("");
+  const [vacBoosterGuidance, setVacBoosterGuidance] = useState("");
+  const [vacCatalogNote, setVacCatalogNote] = useState("");
   const [vacDate, setVacDate] = useState(new Date().toISOString().split("T")[0]);
   const [vacNextDate, setVacNextDate] = useState("");
   const [vacBatch, setVacBatch] = useState("");
@@ -95,30 +99,45 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
   }
 
   const speciesMeta = SPECIES_LABELS[pet.species] || { ar: pet.species, icon: "Sparkles" };
+  const availableVaccines = VACCINE_CATALOG.filter((item) => item.species.includes(pet.species));
+  const selectedVaccine = VACCINE_CATALOG.find((item) => item.id === selectedVaccineId);
   const ageDisplay = calculateAge(pet.birth_date, pet.estimated_age_months);
+
+  const handleVaccineSelection = (value: string) => {
+    setSelectedVaccineId(value);
+    const vaccine = VACCINE_CATALOG.find((item) => item.id === value);
+    if (!vaccine) {
+      setVacName(""); setVacTarget(""); setVacBoosterGuidance(""); setVacCatalogNote("");
+      return;
+    }
+    setVacName(vaccine.name);
+    setVacTarget(vaccine.diseases);
+    setVacBoosterGuidance(vaccine.boosterGuidance);
+    setVacCatalogNote(vaccine.note || "");
+  };
 
   const handleSaveVaccine = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!vacName || !vacDate) return;
+    if (!vacName.trim() || !vacDate) return;
 
     setVacSaving(true);
     const { data, error } = await createClient().from("vaccination_records").insert({
       pet_id: pet.id,
       administered_by_vet_id: vetId,
       created_by: vetId,
-      vaccine_name: vacName,
+      vaccine_name: vacName.trim(),
       target_diseases: vacTarget || "وقاية عامة",
       administration_date: vacDate,
       next_due_date: vacNextDate || null,
       batch_number: vacBatch || null,
       manufacturer: vacManufacturer || null,
       is_verified_by_vet: true,
-      notes: "تم الإعطاء في العيادة بواسطة الطبيب المعالج.",
+      notes: ["تم الإعطاء في العيادة بواسطة الطبيب المعالج.", vacBoosterGuidance.trim() && `إرشادات الجرعة التالية: ${vacBoosterGuidance.trim()}`, vacCatalogNote.trim()].filter(Boolean).join("\n\n"),
     }).select("*").single();
     setVacSaving(false);
     if (error || !data) { window.alert(error?.message || "تعذر حفظ التطعيم"); return; }
     setVaccinations((items) => [data, ...items]); setShowVaccineModal(false);
-    setVacName(""); setVacTarget(""); setVacBatch("");
+    setSelectedVaccineId(""); setVacName(""); setVacTarget(""); setVacBoosterGuidance(""); setVacCatalogNote(""); setVacNextDate(""); setVacBatch(""); setVacManufacturer("");
   };
 
   const handleAddRxItem = () => {
@@ -261,15 +280,31 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
               </button>
             </div>
             <form onSubmit={handleSaveVaccine} className="space-y-4 text-right">
+              <div>
+                <Label htmlFor="vaccineChoice" required>اختر التطعيم المناسب لـ {speciesMeta.ar}</Label>
+                <select
+                  id="vaccineChoice"
+                  required
+                  value={selectedVaccineId}
+                  onChange={(e) => handleVaccineSelection(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                >
+                  <option value="" disabled>اختر من قائمة التطعيمات</option>
+                  {availableVaccines.map((vaccine) => <option key={vaccine.id} value={vaccine.id}>{vaccine.name}</option>)}
+                  <option value="other">أخرى</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="vName" required>اسم اللقاح التجاري</Label>
+                  <Label htmlFor="vName" required>{selectedVaccineId === "other" ? "اسم التطعيم" : "اسم اللقاح التجاري"}</Label>
                   <Input
                     id="vName"
                     required
-                    placeholder="مثال: Nobivac Rabies, Purevax..."
+                    readOnly={selectedVaccineId !== "other"}
+                    placeholder={selectedVaccineId === "other" ? "اكتب اسم التطعيم" : "سيظهر اسم التطعيم المختار هنا"}
                     value={vacName}
-                    onChange={(e) => setVacName(e.target.value)}
+                    onChange={(e) => selectedVaccineId === "other" && setVacName(e.target.value)}
                   />
                 </div>
                 <div>
@@ -281,6 +316,22 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
                     onChange={(e) => setVacTarget(e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="vBooster">موعد/إرشادات الجرعة التنشيطية (قابلة للتعديل)</Label>
+                <Textarea
+                  id="vBooster"
+                  rows={3}
+                  placeholder="أدخل تعليمات الجرعة التالية حسب حالة الحيوان ونشرة العبوة"
+                  value={vacBoosterGuidance}
+                  onChange={(e) => setVacBoosterGuidance(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  التاريخ المحدد أدناه هو الذي ينشئ تذكيرًا للمالك. راجع سجل الجرعات ونشرة العبوة قبل تحديده.
+                  {selectedVaccine && <> مصدر الجدول: <a className="text-primary underline" href={selectedVaccine.sourceUrl} target="_blank" rel="noreferrer">عرض المصدر</a>.</>}
+                </p>
+                {vacCatalogNote && <p className="mt-2 rounded-md bg-muted p-2 text-xs text-muted-foreground">{vacCatalogNote}</p>}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
