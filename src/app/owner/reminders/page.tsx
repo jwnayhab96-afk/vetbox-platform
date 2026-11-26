@@ -44,19 +44,28 @@ export default function RemindersPage() {
   const [pets, setPets] = useState<any[]>([]);
 
   useEffect(() => {
+    let active = true;
+    let ownerId = "";
+    const supabase = createClient();
     const load = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.assign("/auth/login"); return; }
-      setUserId(user.id);
+      if (!ownerId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { window.location.assign("/auth/login"); return; }
+        ownerId = user.id;
+        setUserId(user.id);
+      }
       const [{ data: reminderRows }, { data: petRows }] = await Promise.all([
-        supabase.from("reminders").select("*, pet:pets(name)").eq("user_id", user.id).order("due_date"),
-        supabase.from("pets").select("id, name").eq("owner_id", user.id).order("name"),
+        supabase.from("reminders").select("*, pet:pets(name)").eq("user_id", ownerId).order("due_date"),
+        supabase.from("pets").select("id, name").eq("owner_id", ownerId).order("name"),
       ]);
-      setReminders((reminderRows || []).map((item: any) => ({ ...item, pet_name: item.pet?.name })));
-      setPets(petRows || []);
+      if (active) {
+        setReminders((reminderRows || []).map((item: any) => ({ ...item, pet_name: item.pet?.name })));
+        setPets(petRows || []);
+      }
     };
-    load();
+    void load();
+    const refreshTimer = window.setInterval(() => { void load(); }, 30_000);
+    return () => { active = false; window.clearInterval(refreshTimer); };
   }, []);
 
   const handleToggle = async (id: string) => {

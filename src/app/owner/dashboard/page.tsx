@@ -44,10 +44,12 @@ export default function OwnerDashboardPage() {
 
   useEffect(() => {
     let active = true;
+    let ownerId = "";
+    const supabase = createClient();
     const load = async () => {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      ownerId = user.id;
       const [{ data: profile }, { data: petRows }, { data: reminderRows }, { data: visitRows }, { data: linkRows }] = await Promise.all([
         supabase.from("profiles").select("id, full_name").eq("id", user.id).single(),
         supabase.from("pets").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }),
@@ -62,8 +64,14 @@ export default function OwnerDashboardPage() {
       setVisits(visitRows || []);
       setLinks(linkRows || []);
     };
+    const refreshReminders = async () => {
+      if (!ownerId) return;
+      const { data } = await supabase.from("reminders").select("*").eq("user_id", ownerId).order("due_date");
+      if (active && data) setReminders(data);
+    };
     load().catch((error) => console.error("Unable to load owner dashboard", error));
-    return () => { active = false; };
+    const refreshTimer = window.setInterval(() => { void refreshReminders(); }, 30_000);
+    return () => { active = false; window.clearInterval(refreshTimer); };
   }, []);
 
   const allVisits = visits;
