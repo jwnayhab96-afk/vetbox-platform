@@ -100,7 +100,8 @@ export default function RegisterPage() {
         <Card className="border-border/70 shadow-xl rounded-[2rem] overflow-hidden p-0 gap-0">
           <div className="h-2 w-full bg-primary" />
           <form onSubmit={handleRegister}>
-            <CardContent className="p-5 sm:p-8 space-y-6">
+            <CardContent className="p-0 md:p-0">
+<div className="p-5 sm:p-8 space-y-6">
               {errorMessage && (
                 <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 border-s-4 border-s-rose-500 text-rose-700 dark:text-rose-400 text-xs sm:text-sm font-semibold leading-relaxed flex items-start gap-3">
                   <AlertCircle className="h-5 w-5 shrink-0 text-rose-600" />
@@ -259,15 +260,18 @@ export default function RegisterPage() {
               <Button type="submit" className="w-full min-h-12 h-12 rounded-2xl text-base font-bold shadow-md active:scale-[0.98] transition-transform" isLoading={loading}>
                 {role === "veterinarian" ? "متابعة تسجيل الطبيب" : "إنشاء الحساب والبدء"}
               </Button>
-            </CardContent>
+            </div>
+</CardContent>
           </form>
 
-          <CardFooter className="p-4 sm:p-5 border-t border-border/60 bg-muted/30 justify-center text-xs sm:text-sm text-muted-foreground">
+          <CardFooter className="p-0 md:p-0 border-t border-border/60 bg-muted/30 text-xs sm:text-sm text-muted-foreground">
+<div className="flex w-full items-center justify-center p-4 sm:p-5">
             <span>لديك حساب بالفعل؟</span>
             <Link href="/auth/login" className="mr-1.5 inline-flex min-h-11 items-center px-2 rounded-xl font-bold text-primary hover:bg-primary/10 hover:underline">
               تسجيل الدخول
             </Link>
-          </CardFooter>
+          </div>
+</CardFooter>
         </Card>
       </div>
     </div>

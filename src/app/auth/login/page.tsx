@@ -128,7 +128,8 @@ export default function LoginPage() {
           {/* Form */}
           <Card className="rounded-[2rem] border-border/70 border-t-4 border-t-primary shadow-2xl shadow-primary/10 overflow-hidden">
             <form onSubmit={handleLogin}>
-              <CardContent className="p-6 sm:p-8 space-y-5">
+              <CardContent className="p-0 md:p-0">
+<div className="p-6 sm:p-8 space-y-5">
                 {errorMessage && (
                   <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/25 border-s-4 border-s-rose-500 text-rose-700 dark:text-rose-400 text-xs sm:text-sm font-semibold flex items-start gap-3 leading-relaxed">
                     <AlertCircle className="h-5 w-5 shrink-0 text-rose-600" />
@@ -178,15 +179,18 @@ export default function LoginPage() {
                 >
                   تسجيل الدخول
                 </Button>
-              </CardContent>
+              </div>
+</CardContent>
             </form>
 
-            <CardFooter className="px-6 sm:px-8 py-5 border-t border-border/60 bg-muted/30 justify-center text-sm text-muted-foreground">
+            <CardFooter className="p-0 md:p-0 border-t border-border/60 bg-muted/30 text-sm text-muted-foreground">
+<div className="flex w-full items-center justify-center px-6 sm:px-8 py-5">
               <span>ليس لديك حساب بعد؟</span>
               <Link href="/auth/register" className="mr-1.5 inline-flex min-h-11 items-center rounded-xl px-2 font-extrabold text-primary hover:bg-primary/10 hover:underline">
                 أنشئ حساباً جديداً
               </Link>
-            </CardFooter>
+            </div>
+</CardFooter>
           </Card>
         </div>
       </main>
