@@ -173,118 +173,157 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
       <div className="p-4 md:p-8 space-y-8 max-w-7xl">
         {/* OFFICIAL DIGITAL PET MEDICAL ID CARD */}
         <FadeIn direction="up" duration={0.4}>
-          <HolographicCard className="rounded-3xl border-2 border-primary/30 bg-card shadow-lg">
+          <HolographicCard className="relative isolate overflow-hidden rounded-3xl border border-primary/25 bg-card shadow-xl shadow-primary/10 ring-1 ring-inset ring-white/40 print:shadow-none">
+            {/* Decorative backdrop (visual only) */}
+            <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+              <div className="absolute -top-24 -end-24 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
+              <div className="absolute -bottom-28 -start-20 h-72 w-72 rounded-full bg-secondary/15 blur-3xl" />
+              <div className="absolute inset-0 text-primary/10 [background-image:radial-gradient(circle,currentColor_1px,transparent_1px)] [background-size:18px_18px]" />
+              <PawPrint className="absolute -bottom-8 end-8 h-48 w-48 -rotate-12 text-primary/[0.06]" />
+            </div>
+
             {/* Top Medical ID Ribbon Banner */}
-          <div className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-2.5 flex items-center justify-between text-xs font-bold">
-            <div className="flex items-center gap-2">
-              <Award className="h-4 w-4" />
-              <span>بطاقة الهوية الطبية البيطرية الرسمية — جمهورية مصر العربية</span>
+            <div className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-gradient-to-r from-primary via-primary to-secondary px-5 py-3 text-white md:px-8">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"
+              />
+              <div className="flex min-w-0 items-center gap-2.5 text-xs font-bold md:text-[13px]">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/30 backdrop-blur-sm">
+                  <Award className="h-4 w-4" />
+                </span>
+                <span className="leading-snug">بطاقة الهوية الطبية البيطرية الرسمية — جمهورية مصر العربية</span>
+              </div>
+              <span
+                dir="ltr"
+                className="rounded-full bg-black/15 px-3 py-1 font-mono text-[11px] font-bold tracking-widest ring-1 ring-white/25 backdrop-blur-sm"
+              >
+                ID: {pet.id.substring(0, 13).toUpperCase()}
+              </span>
             </div>
-            <span className="font-mono tracking-widest text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full">
-              ID: {pet.id.substring(0, 13).toUpperCase()}
-            </span>
-          </div>
 
-          <div className="p-6 md:p-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              {/* Pet Photo with Official Stamp */}
-              <div className="relative h-28 w-28 md:h-32 md:w-32 rounded-3xl bg-muted/60 overflow-hidden border-2 border-primary/30 shrink-0 shadow-md">
-                {pet.photo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={pet.photo_url} alt={pet.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary">
-                    <SpeciesIcon species={pet.species} className="h-14 w-14 opacity-50" />
+            <div className="relative grid gap-6 p-5 sm:p-6 md:p-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-8">
+              <div className="flex min-w-0 flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-7">
+                {/* Pet Photo with gradient frame */}
+                <div className="relative shrink-0">
+                  <div className="rounded-[1.75rem] bg-gradient-to-br from-primary via-primary/50 to-secondary p-1 shadow-xl shadow-primary/25">
+                    <div className="h-28 w-28 overflow-hidden rounded-3xl bg-card md:h-36 md:w-36">
+                      {pet.photo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={pet.photo_url} alt={pet.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 to-secondary/15 text-primary">
+                          <SpeciesIcon species={pet.species} className="h-14 w-14 opacity-50" />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-                <div className="absolute bottom-1 right-1 bg-background/90 text-primary p-1 rounded-lg backdrop-blur-xs shadow-xs">
-                  <SpeciesIcon species={pet.species} className="h-4 w-4" />
+                  <div className="absolute -bottom-2 -end-2 flex h-9 w-9 items-center justify-center rounded-xl bg-card text-primary shadow-lg ring-4 ring-card">
+                    <SpeciesIcon species={pet.species} className="h-4 w-4" />
+                  </div>
+                </div>
+
+                <div className="min-w-0 space-y-3 text-right">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <h2 className="font-display text-3xl font-black tracking-tight text-foreground md:text-4xl">
+                      {pet.name}
+                    </h2>
+                    <Badge
+                      variant="outline"
+                      className="rounded-full border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold text-primary"
+                    >
+                      {speciesMeta.ar}
+                    </Badge>
+                    <HealthIndicator
+                      hasRecentExam={hasRecentExam}
+                      hasOverdueVaccine={false}
+                      isOwnerReportedOnly={!hasRecentExam}
+                    />
+                  </div>
+
+                  <p className="text-sm font-medium text-muted-foreground md:text-base">
+                    {pet.breed || "سلالة غير محددة"} • {pet.gender === "male" ? "ذكر" : pet.gender === "female" ? "أنثى" : "غير محدد"}
+                    {pet.is_spayed_neutered && " • (معقم/مخصي)"}
+                  </p>
+
+                  {/* Passport Meta Strip */}
+                  <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-2 rounded-2xl border border-border/70 bg-background/70 py-1.5 pe-3.5 ps-1.5 shadow-xs backdrop-blur-sm">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Calendar className="h-3.5 w-3.5" />
+                      </span>
+                      <span>
+                        العمر: <strong className="text-sm font-bold text-foreground">{ageDisplay}</strong>
+                      </span>
+                    </span>
+                    {pet.weight_kg && (
+                      <span className="flex items-center gap-2 rounded-2xl border border-border/70 bg-background/70 py-1.5 pe-3.5 ps-1.5 shadow-xs backdrop-blur-sm">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <Scale className="h-3.5 w-3.5" />
+                        </span>
+                        <span>
+                          الوزن: <strong className="text-sm font-bold text-foreground">{pet.weight_kg} كجم</strong>
+                        </span>
+                      </span>
+                    )}
+                    {pet.microchip_number && (
+                      <span className="flex items-center gap-2 rounded-2xl border border-dashed border-primary/40 bg-gradient-to-l from-primary/15 to-primary/5 py-1.5 pe-3.5 ps-1.5 font-mono font-bold text-primary">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary text-white shadow-xs">
+                          <QrCode className="h-3.5 w-3.5" />
+                        </span>
+                        شريحة: {pet.microchip_number}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2 text-right">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h2 className="text-2xl md:text-3xl font-black text-foreground font-display">{pet.name}</h2>
-                  <Badge variant="outline" className="text-xs font-bold px-3 py-1">
-                    {speciesMeta.ar}
-                  </Badge>
-                  <HealthIndicator
-                    hasRecentExam={hasRecentExam}
-                    hasOverdueVaccine={false}
-                    isOwnerReportedOnly={!hasRecentExam}
-                  />
-                </div>
+              {/* Quick Actions */}
+              <div className="grid w-full grid-cols-2 gap-2.5 lg:w-80 lg:border-s lg:border-border/60 lg:ps-8">
+                {/* Pet ID Card Download Modal Trigger */}
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setShowIdCardModal(true)}
+                  className="col-span-2 h-11 gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 transition-all hover:-translate-y-0.5 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl"
+                >
+                  <QrCode className="h-4 w-4" />
+                  <span>تحميل كارت الهوية (ID Card)</span>
+                </Button>
 
-                <p className="text-sm text-muted-foreground font-medium">
-                  {pet.breed || "سلالة غير محددة"} • {pet.gender === "male" ? "ذكر" : pet.gender === "female" ? "أنثى" : "غير محدد"}
-                  {pet.is_spayed_neutered && " • (معقم/مخصي)"}
-                </p>
-
-                {/* Passport Meta Strip */}
-                <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1 flex-wrap">
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5 text-primary" />
-                    العمر: <strong className="text-foreground">{ageDisplay}</strong>
-                  </span>
-                  {pet.weight_kg && (
-                    <span className="flex items-center gap-1.5">
-                      <Scale className="h-3.5 w-3.5 text-primary" />
-                      الوزن: <strong className="text-foreground">{pet.weight_kg} كجم</strong>
-                    </span>
-                  )}
-                  {pet.microchip_number && (
-                    <span className="flex items-center gap-1.5 font-mono bg-primary/10 text-primary px-2.5 py-1 rounded-lg font-bold">
-                      <QrCode className="h-3.5 w-3.5" />
-                      شريحة: {pet.microchip_number}
-                    </span>
-                  )}
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrint}
+                  className="h-10 gap-1.5 rounded-xl border-border bg-background/70 text-xs font-bold transition-all hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5"
+                >
+                  <Printer className="h-4 w-4 text-primary" />
+                  طباعة الكارت
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddNote(true)}
+                  className="h-10 gap-1.5 rounded-xl border-border bg-background/70 text-xs font-bold transition-all hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5"
+                >
+                  <Plus className="h-4 w-4 text-primary" />
+                  رصد ملاحظة
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setShowLinkModal(true)}
+                  className="col-span-2 h-11 gap-1.5 rounded-xl bg-primary text-xs font-bold text-white shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:bg-primary-hover"
+                >
+                  <Stethoscope className="h-4 w-4" />
+                  ربط بطبيب
+                </Button>
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
-              {/* Pet ID Card Download Modal Trigger */}
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setShowIdCardModal(true)}
-                className="gap-2 text-xs h-10 font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all hover:scale-[1.02]"
-              >
-                <QrCode className="h-4 w-4" />
-                <span>تحميل كارت الهوية (ID Card)</span>
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePrint}
-                className="gap-1.5 text-xs h-10 font-bold rounded-xl border-border hover:border-primary"
-              >
-                <Printer className="h-4 w-4 text-primary" />
-                طباعة الكارت
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddNote(true)}
-                className="gap-1.5 text-xs h-10 font-bold rounded-xl"
-              >
-                <Plus className="h-4 w-4 text-primary" />
-                رصد ملاحظة
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => setShowLinkModal(true)}
-                className="gap-1.5 text-xs h-10 font-bold rounded-xl bg-primary hover:bg-primary-hover text-white shadow-xs"
-              >
-                <Stethoscope className="h-4 w-4" />
-                ربط بطبيب
-              </Button>
-            </div>
-          </div>
-        </HolographicCard>
-      </FadeIn>
+            {/* Bottom accent line */}
+            <div aria-hidden className="h-1 bg-gradient-to-r from-secondary via-primary to-secondary opacity-80" />
+          </HolographicCard>
+        </FadeIn>
 
         {/* OWNER OBSERVATION MODAL */}
         {showAddNote && (
