@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Logo } from "@/components/shared/logo";
-import { Lock, Mail, AlertCircle } from "lucide-react";
+import { Lock, Mail, AlertCircle, PawPrint, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -76,73 +76,120 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-primary/5 via-background to-background">
-      <div className="w-full max-w-md space-y-6">
-        {/* Brand */}
-        <div className="text-center space-y-3 flex flex-col items-center">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background overflow-x-clip">
+      {/* ───────── Brand panel (desktop) ───────── */}
+      <aside className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-primary text-white p-12 xl:p-16">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.22)_1px,transparent_0)] [background-size:24px_24px] [mask-image:linear-gradient(to_bottom_left,black,transparent_70%)]"
+        />
+        <div aria-hidden className="pointer-events-none absolute -top-32 -left-24 h-96 w-96 rounded-full bg-white/15 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-40 -right-10 h-[30rem] w-[30rem] rounded-full bg-secondary/50 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-br from-black/0 via-black/0 to-black/25" />
+        <PawPrint aria-hidden className="pointer-events-none absolute -bottom-20 -left-16 h-[28rem] w-[28rem] -rotate-12 text-white/[0.07]" />
+
+        <div className="relative z-10 inline-flex self-start rounded-2xl bg-white p-3 shadow-xl shadow-black/20">
           <Logo size="lg" subtitle="" />
-          <h2 className="text-2xl font-black text-foreground">تسجيل الدخول إلى حسابك</h2>
-          <p className="text-xs text-muted-foreground">تابع السجلات الطبية لحيواناتك وتواصل مع طبيبك البيطري</p>
         </div>
 
-        {/* Standard Form */}
-        <Card className="border-border shadow-sm">
-          <form onSubmit={handleLogin}>
-            <CardContent className="p-6 space-y-4">
-              {errorMessage && (
-                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-medium flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
-                  <span>{errorMessage}</span>
+        <div className="relative z-10 space-y-6 max-w-md">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 border border-white/25 backdrop-blur">
+            <ShieldCheck className="h-7 w-7" />
+          </span>
+          <h2 className="text-4xl xl:text-5xl font-black font-display leading-[1.2]">
+            تسجيل الدخول إلى حسابك
+          </h2>
+          <p className="text-lg text-white/80 leading-relaxed">
+            تابع السجلات الطبية لحيواناتك وتواصل مع طبيبك البيطري
+          </p>
+        </div>
+
+        <div className="relative z-10 text-xs font-black font-brand tracking-[0.3em] text-white/70">VETBOX</div>
+      </aside>
+
+      {/* ───────── Form side ───────── */}
+      <main className="relative flex items-center justify-center p-4 sm:p-8 bg-gradient-to-b from-primary/10 via-background to-background lg:from-background">
+        <div aria-hidden className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-primary/15 blur-3xl lg:hidden" />
+
+        <div className="relative w-full max-w-md space-y-7">
+          {/* Brand (mobile / tablet) */}
+          <div className="text-center space-y-3 flex flex-col items-center lg:hidden">
+            <Logo size="lg" subtitle="" />
+            <h2 className="text-2xl sm:text-3xl font-black text-foreground font-display">تسجيل الدخول إلى حسابك</h2>
+            <p className="text-sm text-muted-foreground">تابع السجلات الطبية لحيواناتك وتواصل مع طبيبك البيطري</p>
+          </div>
+
+          {/* Heading (desktop, form side) */}
+          <div className="hidden lg:block text-right space-y-2">
+            <span className="block h-1.5 w-14 rounded-full bg-primary" />
+            <h2 className="text-3xl font-black text-foreground font-display">تسجيل الدخول إلى حسابك</h2>
+          </div>
+
+          {/* Form */}
+          <Card className="rounded-[1.75rem] border-border/70 shadow-2xl shadow-primary/10 overflow-hidden">
+            <form onSubmit={handleLogin}>
+              <CardContent className="p-6 sm:p-8 space-y-5">
+                {errorMessage && (
+                  <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-400 text-xs font-medium flex items-start gap-2.5 leading-relaxed">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                <div className="space-y-2 text-right">
+                  <Label htmlFor="email" className="font-bold">البريد الإلكتروني</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="example@vetbox.eg"
+                    icon={<Mail className="h-4 w-4" />}
+                    className="h-12 rounded-xl bg-muted/40 focus-visible:bg-card"
+                  />
                 </div>
-              )}
 
-              <div className="space-y-1.5 text-right">
-                <Label htmlFor="email">البريد الإلكتروني</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="example@vetbox.eg"
-                  icon={<Mail className="h-4 w-4" />}
-                />
-              </div>
-
-              <div className="space-y-1.5 text-right">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">كلمة المرور</Label>
-                  <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline">
-                    نسيت كلمة المرور؟
-                  </Link>
+                <div className="space-y-2 text-right">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label htmlFor="password" className="font-bold">كلمة المرور</Label>
+                    <Link href="/auth/forgot-password" className="text-xs font-semibold text-primary hover:underline">
+                      نسيت كلمة المرور؟
+                    </Link>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    icon={<Lock className="h-4 w-4" />}
+                    className="h-12 rounded-xl bg-muted/40 focus-visible:bg-card"
+                  />
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  icon={<Lock className="h-4 w-4" />}
-                />
-              </div>
 
-              <Button type="submit" className="w-full h-11 font-semibold" isLoading={loading}>
-                تسجيل الدخول
-              </Button>
-            </CardContent>
-          </form>
+                <Button
+                  type="submit"
+                  className="w-full h-12 rounded-xl text-base font-extrabold shadow-lg shadow-primary/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                  isLoading={loading}
+                >
+                  تسجيل الدخول
+                </Button>
+              </CardContent>
+            </form>
 
-          <CardFooter className="p-6 pt-0 border-t border-border/60 justify-center text-xs text-muted-foreground mt-4">
-            <span>ليس لديك حساب بعد؟</span>
-            <Link href="/auth/register" className="mr-1.5 font-semibold text-primary hover:underline">
-              أنشئ حساباً جديداً
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
+            <CardFooter className="px-6 sm:px-8 py-5 border-t border-border/60 bg-muted/30 justify-center text-sm text-muted-foreground">
+              <span>ليس لديك حساب بعد؟</span>
+              <Link href="/auth/register" className="mr-1.5 font-extrabold text-primary hover:underline">
+                أنشئ حساباً جديداً
+              </Link>
+            </CardFooter>
+          </Card>
+        </div>
+      </main>
     </div>
   );
 }
