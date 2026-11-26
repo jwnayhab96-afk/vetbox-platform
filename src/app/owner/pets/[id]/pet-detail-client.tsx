@@ -106,17 +106,6 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
     setShowRxModal(true);
   };
 
-  const handleToggleRxDispensed = async (id: string) => {
-    const rx = prescriptions.find((item) => item.id === id);
-    if (!rx) return;
-    const { error } = await createClient().from("prescriptions").update({ status: rx.status === "dispensed" ? "active" : "dispensed", dispensed_at: rx.status === "dispensed" ? null : new Date().toISOString() }).eq("id", id);
-    if (error) { window.alert("تسجيل الصرف متاح للطبيب أو الصيدلية فقط."); return; }
-    const updated = prescriptions.map((item) => item.id === id ? { ...item, status: rx.status === "dispensed" ? "active" : "dispensed" } as Prescription : item);
-    setPrescriptions(updated);
-    const found = updated.find((item) => item.id === id);
-    if (found) setSelectedPrescription(found);
-  };
-
   if (!pet) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[500px]">
@@ -806,7 +795,6 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
         isOpen={showRxModal}
         onClose={() => setShowRxModal(false)}
         prescription={selectedPrescription}
-        onToggleDispensed={handleToggleRxDispensed}
       />
     </div>
   );
