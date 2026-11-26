@@ -8,7 +8,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border border-border bg-card text-card-foreground shadow-xs transition-all duration-200 hover:shadow-md",
+      "min-w-0 rounded-3xl border border-border/70 bg-card text-card-foreground shadow-sm transition-all duration-200 hover:shadow-md",
       className
     )}
     {...props}
@@ -16,26 +16,29 @@ const Card = React.forwardRef<
 ));
 Card.displayName = "Card";
 
+// ملاحظة: الحشو الافتراضي لـ CardHeader / CardContent / CardFooter يعتمد على
+// أن المحتوى يلي الرأس مباشرة (pt-0). عند تخصيص الحشو مرّر p-0 md:p-0 ثم ضع
+// الحشو في div داخلي حتى لا تبقى كلاسات md: الافتراضية فعّالة.
 const CardHeader = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-5 md:p-6", className)}
+    className={cn("flex flex-col space-y-2 p-5 md:p-6", className)}
     {...props}
   />
 ));
 CardHeader.displayName = "CardHeader";
 
 const CardTitle = React.forwardRef<
-  HTMLParagraphElement,
+  HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
     className={cn(
-      "text-lg md:text-xl font-semibold leading-none tracking-tight text-foreground",
+      "text-lg md:text-xl font-bold leading-snug text-foreground",
       className
     )}
     {...props}
@@ -69,7 +72,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-5 md:p-6 pt-0 md:pt-0", className)}
+    className={cn("flex items-center gap-2 p-5 md:p-6 pt-0 md:pt-0", className)}
     {...props}
   />
 ));
