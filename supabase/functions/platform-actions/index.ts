@@ -36,13 +36,72 @@ Deno.serve(async (request) => {
     .select("id, role")
     .eq("id", authData.user.id)
     .maybeSingle();
-  if (profileError || !profile) return json({ error: "User profile not found" }, 403);
+  if (profileError) {
+    console.error("Application profile lookup failed", {
+      code: profileError.code,
+      message: profileError.message,
+    });
+    return json({ error: `Could not read public.profiles: ${profileError.message} (${profileError.code || "database error"})` }, 500);
+  }
+  if (!profile) {
+    console.warn("Authenticated account has no public profile");
+    const signedInIdentity = authData.user.email || authData.user.id;
+    return json({ error: `No public.profiles row exists for the signed-in account (${signedInIdentity}). The account profile must be repaired before this action can run.` }, 403);
+  }
 
   let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
     return json({ error: "Invalid request body" }, 400);
+  }
+
+  if (body.action === "list_users") {
+    if (profile.role !== "admin") return json({ error: "Administrator access required" }, 403);
+
+    const authUsers = [];
+    for (let page = 1; ; page += 1) {
+      const { data, error } = await service.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) return json({ error: `Could not load Auth users: ${error.message}` }, 500);
+      authUsers.push(...data.users);
+      if (data.users.length < 1000) break;
+    }
+
+    const { data: profiles, error: profilesError } = await service.from("profiles").select("*");
+    if (profilesError) return json({ error: `Could not load profiles: ${profilesError.message} (${profilesError.code || "database error"})` }, 500);
+    const profileById = new Map((profiles || []).map((row) => [row.id, row]));
+    const ownerIds = (profiles || []).filter((row) => row.role === "owner").map((row) => row.id);
+    let petsByOwner = new Map<string, Array<Record<string, unknown>>>();
+    if (ownerIds.length) {
+      const { data: pets, error: petsError } = await service
+        .from("pets")
+        .select("id, owner_id, name, species, breed, created_at")
+        .in("owner_id", ownerIds);
+      if (petsError) return json({ error: `Could not load owner pets: ${petsError.message}` }, 500);
+      for (const pet of pets || []) petsByOwner.set(pet.owner_id, [...(petsByOwner.get(pet.owner_id) || []), pet]);
+    }
+    const veterinarianIds = (profiles || []).filter((row) => row.role === "veterinarian").map((row) => row.id);
+    let veterinarianById = new Map<string, Record<string, unknown>>();
+    if (veterinarianIds.length) {
+      const { data: veterinarians, error: veterinariansError } = await service
+        .from("veterinarian_profiles")
+        .select("id, license_number, years_of_experience, specializations, education, clinic_affiliation_name, consultation_fee, verification_status")
+        .in("id", veterinarianIds);
+      if (veterinariansError) return json({ error: `Could not load veterinarian details: ${veterinariansError.message}` }, 500);
+      veterinarianById = new Map((veterinarians || []).map((row) => [row.id, row]));
+    }
+
+    return json({ users: authUsers.map((authUser) => ({
+      id: authUser.id,
+      email: authUser.email || "",
+      auth_phone: authUser.phone || "",
+      email_confirmed_at: authUser.email_confirmed_at,
+      last_sign_in_at: authUser.last_sign_in_at,
+      auth_created_at: authUser.created_at,
+      profile: profileById.get(authUser.id) || null,
+      veterinarian: veterinarianById.get(authUser.id) || null,
+      pets: petsByOwner.get(authUser.id) || [],
+    })) });
   }
 
   if (body.action === "set_password") {
