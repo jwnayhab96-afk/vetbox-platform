@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
 import { Bell, Users } from "lucide-react";
 
 type ClientRecipient = { id: string; full_name: string; pets: string[] };
@@ -63,7 +64,7 @@ export default function VeterinarianNotificationsPage() {
       },
     });
     setSending(false);
-    if (error || data?.error) { setFeedback(error?.message || data.error); return; }
+    if (error || data?.error) { setFeedback(await getFunctionErrorMessage(error, data)); return; }
     setFeedback(`تم إرسال الإشعار إلى ${data.count} من عملائك.`);
     setTitle(""); setMessage(""); setRecipientId("");
   };

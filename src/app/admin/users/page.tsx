@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
+import { getFunctionErrorMessage } from "@/lib/supabase/function-error";
 import { Users, Search, Shield, User, Stethoscope } from "lucide-react";
 
 export default function AdminUsersPage() {
@@ -52,7 +53,7 @@ export default function AdminUsersPage() {
       },
     });
     setNoticeBusy(false);
-    if (error || data?.error) { setActionFeedback(error?.message || data.error); return; }
+    if (error || data?.error) { setActionFeedback(await getFunctionErrorMessage(error, data)); return; }
     setActionFeedback(`تم إرسال الإشعار إلى ${data.count} حساب.`);
     setNoticeTitle(""); setNoticeMessage(""); setNoticeRecipient("");
   };
@@ -64,7 +65,7 @@ export default function AdminUsersPage() {
       body: { action: "set_password", targetUserId: passwordRecipient, password: newPassword },
     });
     setPasswordBusy(false);
-    if (error || data?.error) { setActionFeedback(error?.message || data.error); return; }
+    if (error || data?.error) { setActionFeedback(await getFunctionErrorMessage(error, data)); return; }
     setActionFeedback("تم تغيير كلمة مرور الحساب."); setNewPassword("");
   };
 
