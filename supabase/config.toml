@@ -1,0 +1,2 @@
+[functions.platform-actions]
+verify_jwt = true

@@ -14,15 +14,27 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
+    let active = true;
+    let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
     const load = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { window.location.assign("/auth/login"); return; }
+      if (!active) return;
       setUserId(user.id);
       const { data, error } = await supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-      if (!error) setNotifications(data || []);
+      if (active && !error) setNotifications(data || []);
+      channel = supabase.channel(`owner-notifications-${user.id}`)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, (payload) => {
+          setNotifications((items) => [payload.new as any, ...items.filter((item) => item.id !== (payload.new as any).id)]);
+        })
+        .subscribe();
     };
-    load();
+    void load();
+    return () => {
+      active = false;
+      if (channel) void createClient().removeChannel(channel);
+    };
   }, []);
 
   const handleMarkRead = async (id: string) => {

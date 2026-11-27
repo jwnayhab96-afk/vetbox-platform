@@ -22,6 +22,8 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
   const [vet, setVet] = useState<any>(null);
   const [currentProfile, setCurrentProfile] = useState<any>(null);
   const [userPets, setUserPets] = useState<any[]>([]);
+  const [petsLoading, setPetsLoading] = useState(false);
+  const [petsLoadError, setPetsLoadError] = useState("");
 
   const [selectedPet, setSelectedPet] = useState("");
   const [requested, setRequested] = useState(false);
@@ -37,11 +39,17 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
       if (!active) return;
       setVet(vetData);
       if (user) {
-        const [{ data: profile }, { data: pets }] = await Promise.all([
+        setPetsLoading(true);
+        const [profileResult, petsResult] = await Promise.all([
           supabase.from("profiles").select("*").eq("id", user.id).single(),
           supabase.from("pets").select("id, name, species, breed").eq("owner_id", user.id).order("name"),
         ]);
-        if (active) { setCurrentProfile(profile); setUserPets(pets || []); }
+        if (active) {
+          setCurrentProfile(profileResult.data || { id: user.id });
+          setUserPets(petsResult.data || []);
+          setPetsLoadError(petsResult.error ? `تعذر تحميل حيواناتك: ${petsResult.error.message}` : "");
+          setPetsLoading(false);
+        }
       }
     };
     load();
@@ -150,7 +158,7 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
                     required
                     className="flex-1 h-10 rounded-lg border border-input bg-card px-3 text-xs md:text-sm focus:ring-2 focus:ring-primary focus:outline-none"
                   >
-                    <option value="">-- اختر الحيوان الذي تريد ربطه --</option>
+                    <option value="">{petsLoading ? "جارٍ تحميل حيواناتك..." : "-- اختر الحيوان الذي تريد ربطه --"}</option>
                     {userPets.map((p) => (
                       <option key={p.id} value={p.id}>{p.name} ({p.breed || p.species})</option>
                     ))}
@@ -158,6 +166,10 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
                   <Button type="submit" className="font-semibold text-xs h-10">
                     إرسال طلب ربط طبي
                   </Button>
+                  {petsLoadError && <p role="alert" className="text-xs text-destructive">{petsLoadError}</p>}
+                  {!petsLoading && !petsLoadError && userPets.length === 0 && (
+                    <p className="text-xs text-muted-foreground">لا توجد حيوانات مسجلة في حسابك. <Link className="text-primary underline" href="/owner/pets/new">أضف حيوانًا أولًا</Link>.</p>
+                  )}
                 </form>
               )}
             </div>

@@ -79,6 +79,7 @@ export function Sidebar({ role }: SidebarProps) {
     { href: "/veterinarian/patients", label: "قائمة المرضى والحالات", icon: PawPrint },
     { href: "/veterinarian/visits/new", label: "تسجيل كشف سريري", icon: PlusCircle },
     { href: "/veterinarian/connection-requests", label: "طلبات الربط الجديدة", icon: Users },
+    { href: "/veterinarian/notifications", label: "إشعارات العملاء", icon: Bell },
     { href: "/veterinarian/verification", label: "اعتماد ترخيص النقابة", icon: ShieldCheck },
     { href: "/veterinarian/profile", label: "ملفي المهني والعيادة", icon: Stethoscope },
     { href: "/veterinarian/settings", label: "الإعدادات", icon: Settings },

@@ -15,7 +15,7 @@ import { calculateAge, formatArabicDate, SPECIES_LABELS } from "@/lib/utils";
 import { PrescriptionModal } from "@/components/medical/prescription-modal";
 import { Prescription, PrescriptionItem } from "@/lib/types/database.types";
 import { Textarea } from "@/components/ui/textarea";
-import { VACCINE_CATALOG } from "@/lib/data/vaccine-catalog";
+import { getSuggestedNextDoseDate, VACCINE_CATALOG } from "@/lib/data/vaccine-catalog";
 import {
   Stethoscope,
   Plus,
@@ -71,6 +71,7 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
   const [vacCatalogNote, setVacCatalogNote] = useState("");
   const [vacDate, setVacDate] = useState(new Date().toISOString().split("T")[0]);
   const [vacNextDate, setVacNextDate] = useState("");
+  const [vacNextDateManuallyEdited, setVacNextDateManuallyEdited] = useState(false);
   const [vacBatch, setVacBatch] = useState("");
   const [vacManufacturer, setVacManufacturer] = useState("");
   const [vacSaving, setVacSaving] = useState(false);
@@ -108,12 +109,15 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
     const vaccine = VACCINE_CATALOG.find((item) => item.id === value);
     if (!vaccine) {
       setVacName(""); setVacTarget(""); setVacBoosterGuidance(""); setVacCatalogNote("");
+      setVacNextDate(""); setVacNextDateManuallyEdited(false);
       return;
     }
     setVacName(vaccine.name);
     setVacTarget(vaccine.diseases);
     setVacBoosterGuidance(vaccine.boosterGuidance);
     setVacCatalogNote(vaccine.note || "");
+    setVacNextDate(getSuggestedNextDoseDate(vaccine, vacDate));
+    setVacNextDateManuallyEdited(false);
   };
 
   const handleSaveVaccine = async (e: React.FormEvent) => {
@@ -132,12 +136,12 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
       batch_number: vacBatch || null,
       manufacturer: vacManufacturer || null,
       is_verified_by_vet: true,
-      notes: ["تم الإعطاء في العيادة بواسطة الطبيب المعالج.", vacBoosterGuidance.trim() && `إرشادات الجرعة التالية: ${vacBoosterGuidance.trim()}`, vacCatalogNote.trim()].filter(Boolean).join("\n\n"),
+      notes: ["تم الإعطاء في العيادة بواسطة الطبيب المعالج.", vacCatalogNote.trim()].filter(Boolean).join("\n\n"),
     }).select("*").single();
     setVacSaving(false);
     if (error || !data) { window.alert(error?.message || "تعذر حفظ التطعيم"); return; }
     setVaccinations((items) => [data, ...items]); setShowVaccineModal(false);
-    setSelectedVaccineId(""); setVacName(""); setVacTarget(""); setVacBoosterGuidance(""); setVacCatalogNote(""); setVacNextDate(""); setVacBatch(""); setVacManufacturer("");
+    setSelectedVaccineId(""); setVacName(""); setVacTarget(""); setVacBoosterGuidance(""); setVacCatalogNote(""); setVacNextDate(""); setVacNextDateManuallyEdited(false); setVacBatch(""); setVacManufacturer("");
   };
 
   const handleAddRxItem = () => {
@@ -301,10 +305,9 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
                   <Input
                     id="vName"
                     required
-                    readOnly={selectedVaccineId !== "other"}
-                    placeholder={selectedVaccineId === "other" ? "اكتب اسم التطعيم" : "سيظهر اسم التطعيم المختار هنا"}
+                    placeholder="اسم التطعيم"
                     value={vacName}
-                    onChange={(e) => selectedVaccineId === "other" && setVacName(e.target.value)}
+                    onChange={(e) => setVacName(e.target.value)}
                   />
                 </div>
                 <div>
@@ -323,6 +326,7 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
                 <Textarea
                   id="vBooster"
                   rows={3}
+                  readOnly
                   placeholder="أدخل تعليمات الجرعة التالية حسب حالة الحيوان ونشرة العبوة"
                   value={vacBoosterGuidance}
                   onChange={(e) => setVacBoosterGuidance(e.target.value)}
@@ -342,7 +346,11 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
                     type="date"
                     required
                     value={vacDate}
-                    onChange={(e) => setVacDate(e.target.value)}
+                    onChange={(e) => {
+                      const nextDate = e.target.value;
+                      setVacDate(nextDate);
+                      if (!vacNextDateManuallyEdited) setVacNextDate(getSuggestedNextDoseDate(selectedVaccine, nextDate));
+                    }}
                   />
                 </div>
                 <div>
@@ -351,7 +359,7 @@ export default function VetPatientDetailClient({ petId: propPetId }: { petId?: s
                     id="vNext"
                     type="date"
                     value={vacNextDate}
-                    onChange={(e) => setVacNextDate(e.target.value)}
+                    onChange={(e) => { setVacNextDate(e.target.value); setVacNextDateManuallyEdited(true); }}
                   />
                 </div>
               </div>

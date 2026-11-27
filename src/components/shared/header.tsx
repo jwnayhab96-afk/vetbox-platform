@@ -54,6 +54,7 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
       { href: "/veterinarian/patients", label: "المرضى والحالات" },
       { href: "/veterinarian/visits/new", label: "تسجيل كشف" },
       { href: "/veterinarian/connection-requests", label: "طلبات الربط" },
+      { href: "/veterinarian/notifications", label: "إشعارات العملاء" },
       { href: "/veterinarian/verification", label: "اعتماد الترخيص" },
       { href: "/veterinarian/profile", label: "الملف المهني" },
       { href: "/veterinarian/settings", label: "الإعدادات" },
