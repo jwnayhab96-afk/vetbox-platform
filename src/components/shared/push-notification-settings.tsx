@@ -111,6 +111,27 @@ export function PushNotificationSettings() {
     }
   };
 
+  const sendDisplayTest = async () => {
+    setBusy(true);
+    setMessage("");
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification("اختبار إشعارات VetBox", {
+        body: "إذا ظهر هذا التنبيه، فـ Chrome وAndroid يسمحان بعرض إشعارات الموقع.",
+        icon: "/icons/icon-192.png",
+        badge: "/icons/icon-192.png",
+        tag: "vetbox-local-notification-test",
+        dir: "rtl",
+        lang: "ar",
+      });
+      setMessage("تم طلب عرض إشعار اختبار محلي. هذا الاختبار لا يمر عبر Supabase.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "تعذر عرض إشعار الاختبار.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const iosInstallHint = typeof navigator !== "undefined" && /iPhone|iPad|iPod/.test(navigator.userAgent) && !("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone);
 
   return (
@@ -132,9 +153,14 @@ export function PushNotificationSettings() {
           </button>
         )}
         {state === "on" && !busy && (
-          <button onClick={disable} className="min-h-9 shrink-0 rounded-xl border border-border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted">
-            إيقاف
-          </button>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button onClick={sendDisplayTest} className="min-h-9 rounded-xl border border-primary/30 px-3 text-xs font-semibold text-primary hover:bg-primary/5">
+              اختبار
+            </button>
+            <button onClick={disable} className="min-h-9 rounded-xl border border-border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted">
+              إيقاف
+            </button>
+          </div>
         )}
         {state === "denied" && <span className="text-[11px] font-semibold text-muted-foreground">الإذن مرفوض</span>}
         {state === "unconfigured" && <span className="text-[11px] text-muted-foreground">قريباً</span>}
