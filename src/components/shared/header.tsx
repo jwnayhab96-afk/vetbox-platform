@@ -63,6 +63,7 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
       { href: "/admin/dashboard", label: "لوحة الإدارة" },
       { href: "/admin/veterinarians", label: "اعتماد الأطباء" },
       { href: "/admin/users", label: "المستخدمون" },
+      { href: "/admin/storage", label: "تخزين صور الحيوانات" },
       { href: "/admin/clinics", label: "العيادات" },
       { href: "/admin/articles", label: "المقالات" },
       { href: "/admin/reports", label: "التقارير" },

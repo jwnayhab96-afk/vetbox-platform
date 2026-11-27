@@ -124,26 +124,7 @@ export default function AddPetPage() {
     const ownerId = user.id;
     const newPetId = crypto.randomUUID();
 
-    let uploadedPhotoPath: string | null = null;
     let uploadedPhotoUrl: string | null = null;
-
-    if (photoFile) {
-      uploadedPhotoPath = `${ownerId}/${crypto.randomUUID()}.webp`;
-      const { error: uploadError } = await supabase.storage
-        .from("pet-photos")
-        .upload(uploadedPhotoPath, photoFile, {
-          contentType: "image/webp",
-          cacheControl: "31536000",
-          upsert: false,
-        });
-
-      if (uploadError) {
-        setLoading(false);
-        window.alert(`تعذر رفع الصورة: ${uploadError.message}`);
-        return;
-      }
-      uploadedPhotoUrl = supabase.storage.from("pet-photos").getPublicUrl(uploadedPhotoPath).data.publicUrl;
-    }
 
     const { error } = await supabase.from("pets").insert({
       id: newPetId,
@@ -167,12 +148,59 @@ export default function AddPetPage() {
     });
 
     if (error) {
-      if (uploadedPhotoPath) {
-        await supabase.storage.from("pet-photos").remove([uploadedPhotoPath]);
-      }
       setLoading(false);
       window.alert(error?.message || "تعذر حفظ بيانات الحيوان.");
       return;
+    }
+
+    if (photoFile) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        await supabase.from("pets").delete().eq("id", newPetId).eq("owner_id", ownerId);
+        setLoading(false);
+        router.replace("/auth/login");
+        return;
+      }
+
+      let uploadedObjectKey = "";
+      try {
+        const uploadResponse = await fetch("/api/pet-photo", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "image/webp",
+            "x-pet-id": newPetId,
+          },
+          body: photoFile,
+        });
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResponse.ok || typeof uploadResult.url !== "string" || typeof uploadResult.key !== "string") {
+          throw new Error(uploadResult.error || "تعذر رفع الصورة إلى مساحة التخزين.");
+        }
+        uploadedPhotoUrl = uploadResult.url;
+        uploadedObjectKey = uploadResult.key;
+      } catch (uploadError) {
+        await supabase.from("pets").delete().eq("id", newPetId).eq("owner_id", ownerId);
+        setLoading(false);
+        window.alert(uploadError instanceof Error ? uploadError.message : "تعذر رفع الصورة.");
+        return;
+      }
+
+      const { error: photoUpdateError } = await supabase.from("pets")
+        .update({ photo_url: uploadedPhotoUrl })
+        .eq("id", newPetId)
+        .eq("owner_id", ownerId);
+      if (photoUpdateError) {
+        await fetch("/api/pet-photo", {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ petId: newPetId, key: uploadedObjectKey }),
+        }).catch(() => undefined);
+        await supabase.from("pets").delete().eq("id", newPetId).eq("owner_id", ownerId);
+        setLoading(false);
+        window.alert(`تم رفع الصورة لكن تعذر ربطها بملف الحيوان: ${photoUpdateError.message}`);
+        return;
+      }
     }
 
     triggerConfetti();
