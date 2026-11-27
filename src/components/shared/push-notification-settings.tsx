@@ -13,7 +13,6 @@ function decodeApplicationServerKey(key: string) {
 export function PushNotificationSettings() {
   const [state, setState] = useState<"loading" | "unconfigured" | "unsupported" | "off" | "on" | "denied" | "error">("loading");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -42,19 +41,8 @@ export function PushNotificationSettings() {
     return () => { alive = false; };
   }, []);
 
-  useEffect(() => {
-    const handleServiceWorkerMessage = (event: MessageEvent) => {
-      if (event.data?.type === "VETBOX_PUSH_RECEIVED") {
-        setMessage(`وصل إشعار «${String(event.data.title || "إشعار جديد").slice(0, 80)}» إلى Service Worker.`);
-      }
-    };
-    navigator.serviceWorker?.addEventListener("message", handleServiceWorkerMessage);
-    return () => navigator.serviceWorker?.removeEventListener("message", handleServiceWorkerMessage);
-  }, []);
-
   const enable = async () => {
     setBusy(true);
-    setMessage("");
     try {
       const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!publicKey) throw new Error("إعداد الإشعارات لم يكتمل بعد.");
@@ -65,7 +53,6 @@ export function PushNotificationSettings() {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
         setState(permission === "denied" ? "denied" : "off");
-        setMessage(permission === "denied" ? "الإذن مرفوض من إعدادات المتصفح." : "لم يتم منح الإذن.");
         return;
       }
 
@@ -91,10 +78,8 @@ export function PushNotificationSettings() {
       }, { onConflict: "endpoint" });
       if (error) throw error;
       setState("on");
-      setMessage("تم تفعيل إشعارات الهاتف لهذا الجهاز.");
-    } catch (error) {
+    } catch {
       setState("error");
-      setMessage(error instanceof Error ? error.message : "تعذر تفعيل الإشعارات حالياً.");
     } finally {
       setBusy(false);
     }
@@ -102,7 +87,6 @@ export function PushNotificationSettings() {
 
   const disable = async () => {
     setBusy(true);
-    setMessage("");
     try {
       const registration = await navigator.serviceWorker.getRegistration("/");
       const subscription = await registration?.pushManager.getSubscription();
@@ -113,30 +97,8 @@ export function PushNotificationSettings() {
         await subscription.unsubscribe();
       }
       setState("off");
-      setMessage("تم إيقاف إشعارات هذا الجهاز.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "تعذر إيقاف الإشعارات.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const sendDisplayTest = async () => {
-    setBusy(true);
-    setMessage("");
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification("اختبار إشعارات VetBox", {
-        body: "إذا ظهر هذا التنبيه، فـ Chrome وAndroid يسمحان بعرض إشعارات الموقع.",
-        icon: "/icons/icon-192.png",
-        badge: "/icons/icon-192.png",
-        tag: "vetbox-local-notification-test",
-        dir: "rtl",
-        lang: "ar",
-      });
-      setMessage("تم طلب عرض إشعار اختبار محلي. هذا الاختبار لا يمر عبر Supabase.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "تعذر عرض إشعار الاختبار.");
+    } catch {
+      setState("error");
     } finally {
       setBusy(false);
     }
@@ -163,14 +125,9 @@ export function PushNotificationSettings() {
           </button>
         )}
         {state === "on" && !busy && (
-          <div className="flex shrink-0 items-center gap-1.5">
-            <button onClick={sendDisplayTest} className="min-h-9 rounded-xl border border-primary/30 px-3 text-xs font-semibold text-primary hover:bg-primary/5">
-              اختبار
-            </button>
-            <button onClick={disable} className="min-h-9 rounded-xl border border-border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted">
-              إيقاف
-            </button>
-          </div>
+          <button onClick={disable} className="min-h-9 shrink-0 rounded-xl border border-border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted">
+            إيقاف
+          </button>
         )}
         {state === "denied" && <span className="text-[11px] font-semibold text-muted-foreground">الإذن مرفوض</span>}
         {state === "unconfigured" && <span className="text-[11px] text-muted-foreground">قريباً</span>}
@@ -183,7 +140,6 @@ export function PushNotificationSettings() {
           على iPhone: أضف VetBox إلى الشاشة الرئيسية من قائمة المشاركة، ثم افتحه واضغط «تفعيل».
         </p>
       )}
-      {message && <p role="status" className="mt-2 text-[11px] text-muted-foreground">{message}</p>}
     </section>
   );
 }

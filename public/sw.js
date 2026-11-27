@@ -27,10 +27,6 @@ self.addEventListener("push", (event) => {
   };
 
   event.waitUntil((async () => {
-    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    for (const client of windows) {
-      client.postMessage({ type: "VETBOX_PUSH_RECEIVED", title });
-    }
     await self.registration.showNotification(title, options);
   })());
 });
