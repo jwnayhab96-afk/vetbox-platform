@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, Plus, Menu, X, Check, ExternalLink, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { PushNotificationSettings } from "@/components/shared/push-notification-settings";
 import { createClient } from "@/lib/supabase/client";
 
 interface HeaderProps {
@@ -137,6 +138,8 @@ export function Header({ title, subtitle, action, role }: HeaderProps) {
                 </span>
                 <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">{unreadCount} غير مقروء</span>
               </div>
+
+              <PushNotificationSettings />
 
               <div className="max-h-[min(24rem,60dvh)] space-y-2 overflow-y-auto p-3">
                 {notifications.length === 0 ? (

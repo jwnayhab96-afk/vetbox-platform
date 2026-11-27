@@ -1,2 +1,5 @@
 [functions.platform-actions]
 verify_jwt = true
+
+[functions.push-notifications]
+verify_jwt = false

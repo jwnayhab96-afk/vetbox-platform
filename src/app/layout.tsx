@@ -4,6 +4,12 @@ import { EmergencySosModal } from "@/components/shared/emergency-sos-modal";
 import { Footer } from "@/components/shared/footer";
 
 export const metadata: Metadata = {
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "VetBox" },
   title: {
     template: "%s | فيت بوكس - VetBox",
     default: "فيت بوكس (VetBox) | منظومة الرعاية البيطرية المتكاملة",
