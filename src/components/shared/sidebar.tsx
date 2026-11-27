@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   LogOut,
   ChevronLeft,
+  LifeBuoy,
 } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +74,7 @@ export function Sidebar({ role }: SidebarProps) {
     { href: "/owner/veterinarians", label: "الأطباء المربوطين", icon: Stethoscope },
     { href: "/owner/notifications", label: "التنبيهات", icon: Bell },
     { href: "/owner/settings", label: "إعدادات الحساب", icon: Settings },
+    { href: "/support", label: "الدعم والمساعدة", icon: LifeBuoy },
   ];
 
   const vetLinks = [
@@ -84,6 +86,7 @@ export function Sidebar({ role }: SidebarProps) {
     { href: "/veterinarian/verification", label: "اعتماد ترخيص النقابة", icon: ShieldCheck },
     { href: "/veterinarian/profile", label: "ملفي المهني والعيادة", icon: Stethoscope },
     { href: "/veterinarian/settings", label: "الإعدادات", icon: Settings },
+    { href: "/support", label: "الدعم والمساعدة", icon: LifeBuoy },
   ];
 
   const adminLinks = [
@@ -95,6 +98,7 @@ export function Sidebar({ role }: SidebarProps) {
     { href: "/admin/articles", label: "المقالات والمعرفة", icon: FileText },
     { href: "/admin/reports", label: "سجلات الرقابة والتدقيق", icon: FileText },
     { href: "/admin/settings", label: "إعدادات المنصة", icon: Settings },
+    { href: "/admin/support", label: "طلبات الدعم", icon: LifeBuoy },
   ];
 
   const links = role === "owner" ? ownerLinks : role === "veterinarian" ? vetLinks : adminLinks;

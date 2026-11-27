@@ -295,6 +295,15 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
                   variant="outline"
                   size="sm"
                   onClick={handlePrint}
+                  className="h-10 gap-1.5 rounded-xl border-primary/30 bg-primary/5 text-xs font-bold text-primary transition-all hover:bg-primary/10"
+                >
+                  <FileText className="h-4 w-4" />
+                  حفظ أو مشاركة PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrint}
                   className="h-10 gap-1.5 rounded-xl border-border bg-background/70 text-xs font-bold transition-all hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5"
                 >
                   <Printer className="h-4 w-4 text-primary" />
@@ -820,6 +829,23 @@ export default function PetDetailClient({ id: propId }: { id?: string }) {
         </TabsContent>
         </Tabs>
       </div>
+
+      <section id="medical-record-print" className="hidden print:block" dir="rtl" lang="ar">
+        <h1>الملخص الطبي — {pet.name}</h1>
+        <p>{speciesMeta.ar}{pet.breed ? ` • ${pet.breed}` : ""} • الجنس: {pet.gender || "غير محدد"} • العمر: {ageDisplay}</p>
+        <p>تاريخ إنشاء الملخص: {new Date().toLocaleDateString("ar-EG")}</p>
+        <h2>الزيارات والملاحظات</h2>
+        {visits.length ? visits.map((visit) => <article key={visit.id}><strong>{formatArabicDate(visit.visit_date)} — {visit.visit_reason || "زيارة"}</strong><p>{visit.diagnosis || visit.presenting_complaints || "لا توجد تفاصيل إضافية"}</p>{visit.treatment_plan && <p>الخطة العلاجية: {visit.treatment_plan}</p>}</article>) : <p>لا توجد زيارات مسجلة.</p>}
+        <h2>التطعيمات</h2>
+        {vaccinations.length ? vaccinations.map((vaccine) => <p key={vaccine.id}>{vaccine.vaccine_name} — {formatArabicDate(vaccine.administration_date)}{vaccine.next_due_date ? ` — الجرعة القادمة: ${formatArabicDate(vaccine.next_due_date)}` : ""}{vaccine.target_diseases ? ` — ضد: ${vaccine.target_diseases}` : ""}</p>) : <p>لا توجد تطعيمات مسجلة.</p>}
+        <h2>الجرعات المخططة</h2>
+        {plans.length ? plans.map((plan) => <p key={plan.id}>{plan.vaccine_name} — الموعد المقترح: {formatArabicDate(plan.recommended_date)}</p>) : <p>لا توجد جرعات مخططة.</p>}
+        <h2>الأدوية</h2>
+        {medications.length ? medications.map((med) => <p key={med.id}>{med.medication_name || med.name || "دواء"}{med.dosage ? ` — الجرعة: ${med.dosage}` : ""}{med.start_date ? ` — البداية: ${formatArabicDate(med.start_date)}` : ""}{med.end_date ? ` — النهاية: ${formatArabicDate(med.end_date)}` : ""}</p>) : <p>لا توجد أدوية مسجلة.</p>}
+        <h2>الوصفات الطبية</h2>
+        {prescriptions.length ? prescriptions.map((rx) => <p key={rx.id}>{(rx as any).title || (rx as any).medication_name || "وصفة طبية"} — {formatArabicDate((rx as any).created_at)}</p>) : <p>لا توجد وصفات مسجلة.</p>}
+        <footer>هذا الملخص نسخة للمشاركة ولا يغني عن مراجعة الطبيب البيطري.</footer>
+      </section>
 
       {/* Downloadable Pet ID Card Modal */}
       <PetIdCardModal

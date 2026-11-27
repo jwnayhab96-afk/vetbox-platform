@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
+import { OnboardingChecklist } from "@/components/shared/onboarding-checklist";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -138,6 +139,12 @@ export default function VetDashboardPage() {
       {pageHeader}
 
       <div className="p-4 md:p-8 space-y-8 max-w-7xl">
+        <OnboardingChecklist title="أكمل إعداد ملفك المهني" steps={[
+          { label: "أضف نبذة عن خبرتك ورسوم الكشف", href: "/veterinarian/profile", done: Boolean(vet.bio && vet.consultation_fee != null) },
+          { label: "أدخل تخصصاتك ومؤهلك", href: "/veterinarian/profile", done: Boolean(vet.specializations?.length && vet.education) },
+          { label: "ارفع كارنيه النقابة", href: "/veterinarian/verification", done: Boolean(vet.syndicate_card_url) },
+          { label: "أكمل ساعات عمل العيادة", href: "/veterinarian/profile", done: Boolean(vet.opening_hours && Object.values(vet.opening_hours).some(Boolean)) },
+        ]} />
         {dataWarning && (
           <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
             <AlertCircle className="h-4 w-4 shrink-0" />

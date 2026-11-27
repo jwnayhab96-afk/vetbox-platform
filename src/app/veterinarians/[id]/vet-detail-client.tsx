@@ -24,6 +24,11 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
   const [userPets, setUserPets] = useState<any[]>([]);
   const [petsLoading, setPetsLoading] = useState(false);
   const [petsLoadError, setPetsLoadError] = useState("");
+  const [eligibleToReview, setEligibleToReview] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [reviewSaving, setReviewSaving] = useState(false);
 
   const [selectedPet, setSelectedPet] = useState("");
   const [requested, setRequested] = useState(false);
@@ -49,6 +54,10 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
           setUserPets(petsResult.data || []);
           setPetsLoadError(petsResult.error ? `تعذر تحميل حيواناتك: ${petsResult.error.message}` : "");
           setPetsLoading(false);
+        }
+        if (!petsResult.error && (petsResult.data || []).length > 0) {
+          const { data: completedVisits } = await supabase.from("medical_visits").select("id").eq("vet_id", vetId).eq("author_role", "veterinarian").eq("status", "finalized").in("pet_id", petsResult.data.map((pet) => pet.id)).limit(1);
+          if (active) setEligibleToReview(Boolean(completedVisits?.length));
         }
       }
     };
@@ -83,6 +92,13 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
     });
     if (error) { window.alert(error.message); return; }
     setRequested(true);
+  };
+
+  const handleReview = async (e: React.FormEvent) => {
+    e.preventDefault(); setReviewSaving(true); setReviewMessage("");
+    const { error } = await createClient().rpc("submit_veterinarian_review", { target_vet_id: vet.id, target_rating: rating, target_review: reviewText.trim() || null });
+    setReviewSaving(false);
+    setReviewMessage(error ? "لم نتمكن من حفظ التقييم. تأكد من وجود زيارة مكتملة مع هذا الطبيب، ثم حاول مرة أخرى." : "تم حفظ تقييمك، شكرًا لمشاركتنا تجربتك.");
   };
 
   return (
@@ -124,6 +140,7 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
                   <span>الخبرة: <strong>{vet.years_of_experience} سنوات</strong></span>
                   <span>الكشف: <strong>{vet.consultation_fee} ج.م</strong></span>
                 </div>
+                <p className="text-sm font-semibold text-amber-700">★ {Number(vet.average_rating || 0).toFixed(1)} <span className="font-normal text-muted-foreground">({vet.rating_count || 0} تقييم)</span></p>
               </div>
             </div>
 
@@ -140,7 +157,23 @@ export default function VetDetailClient({ id: propId }: { id?: string }) {
                   </div>
                 </div>
               )}
+              <div className="rounded-xl bg-muted/40 border border-border/60 p-4">
+                <strong className="text-sm">ساعات العمل</strong>
+                <div className="mt-2 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
+                  {Object.entries(vet.opening_hours || {}).filter(([, value]) => Boolean(value)).map(([day, value]) => <span key={day}>{day}: {String(value)}</span>)}
+                  {!Object.values(vet.opening_hours || {}).some(Boolean) && <span>لم يضف الطبيب ساعات العمل بعد.</span>}
+                </div>
+              </div>
             </div>
+
+            {eligibleToReview && <form onSubmit={handleReview} className="mt-6 space-y-3 border-t border-border/60 pt-5 text-right">
+              <h3 className="font-bold">قيّم تجربتك بعد الزيارة</h3>
+              <p className="text-xs text-muted-foreground">التقييم متاح لأصحاب الحيوانات التي لديها زيارة مكتملة مسجلة مع الطبيب.</p>
+              <div className="flex flex-wrap items-center gap-3"><label htmlFor="vet-rating" className="text-sm">التقييم</label><select id="vet-rating" value={rating} onChange={(e) => setRating(Number(e.target.value))} className="h-10 rounded-lg border border-input bg-background px-3"><option value={5}>5 نجوم</option><option value={4}>4 نجوم</option><option value={3}>3 نجوم</option><option value={2}>نجمتان</option><option value={1}>نجمة واحدة</option></select></div>
+              <textarea value={reviewText} onChange={(e) => setReviewText(e.target.value)} maxLength={1200} rows={3} placeholder="اكتب رأيك (اختياري)" className="w-full rounded-xl border border-input bg-background p-3 text-sm" />
+              <Button type="submit" disabled={reviewSaving}>{reviewSaving ? "جارٍ الحفظ..." : "حفظ التقييم"}</Button>
+              {reviewMessage && <p role="status" className="text-sm text-muted-foreground">{reviewMessage}</p>}
+            </form>}
 
             {/* Connect Section */}
             <div className="pt-6 border-t border-border/60 mt-6 text-right space-y-3">

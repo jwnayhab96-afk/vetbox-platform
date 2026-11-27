@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+@media print {
+  body * { visibility: hidden !important; }
+  #medical-record-print, #medical-record-print * { visibility: visible !important; }
+  #medical-record-print {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    padding: 18mm;
+    color: #111 !important;
+    background: #fff !important;
+    font-family: Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.65;
+  }
+  #medical-record-print h1 { font-size: 20pt; margin-bottom: 8px; }
+  #medical-record-print h2 { font-size: 14pt; margin: 18px 0 6px; border-bottom: 1px solid #aaa; }
+  #medical-record-print article, #medical-record-print p { break-inside: avoid; margin: 5px 0; }
+  #medical-record-print footer { margin-top: 24px; border-top: 1px solid #aaa; padding-top: 8px; font-size: 9pt; }
+}
+
 @layer base {
   :root {
     --background: 140 20% 98.5%;

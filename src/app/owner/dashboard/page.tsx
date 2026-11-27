@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import OnboardingProgress from "@/components/OnboardingProgress";
+import MedicalTimeline from "@/components/MedicalTimeline";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Header } from "@/components/shared/header";
 import { PetCard } from "@/components/pet/pet-card";
@@ -8,7 +11,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
 import { formatArabicDate } from "@/lib/utils";
 import {
   FadeIn,
@@ -36,7 +38,7 @@ import {
 } from "lucide-react";
 
 export default function OwnerDashboardPage() {
-  const [currentProfile, setCurrentProfile] = useState<{ id: string; full_name: string } | null>(null);
+  const [currentProfile, setCurrentProfile] = useState<{ id: string; full_name: string; phone?: string | null; governorate?: string | null } | null>(null);
   const [pets, setPets] = useState<any[]>([]);
   const [reminders, setReminders] = useState<any[]>([]);
   const [visits, setVisits] = useState<any[]>([]);
@@ -51,7 +53,7 @@ export default function OwnerDashboardPage() {
       if (!user) return;
       ownerId = user.id;
       const [{ data: profile }, { data: petRows }, { data: reminderRows }, { data: visitRows }, { data: linkRows }] = await Promise.all([
-        supabase.from("profiles").select("id, full_name").eq("id", user.id).single(),
+        supabase.from("profiles").select("id, full_name, phone, governorate").eq("id", user.id).single(),
         supabase.from("pets").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }),
         supabase.from("reminders").select("*").eq("user_id", user.id).order("due_date"),
         supabase.from("medical_visits").select("*, pets!inner(owner_id)").eq("pets.owner_id", user.id).order("visit_date", { ascending: false }),
@@ -74,9 +76,13 @@ export default function OwnerDashboardPage() {
     return () => { active = false; window.clearInterval(refreshTimer); };
   }, []);
 
-  const allVisits = visits;
-  const connectedLinks = links;
-  const activeReminders = reminders.filter((r) => !r.is_completed);
+  const nextReminder = reminders.filter(r => !r.is_completed).sort((a,b)=> new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0] || null;
+  const overdueReminders = reminders.filter(r => !r.is_completed && new Date(r.due_date) < new Date());
+  const lastVetVisit = visits.filter(v => v.author_role === 'veterinarian').sort((a,b)=> new Date(b.visit_date).getTime() - new Date(a.visit_date).getTime())[0] || null;
+  const today = new Date().toISOString().slice(0, 10);
+  const nextReminder = activeReminders.filter((r) => r.due_date >= today).sort((a, b) => a.due_date.localeCompare(b.due_date))[0];
+  const overdueReminders = activeReminders.filter((r) => r.due_date < today);
+  const lastVetVisit = visits.find((visit) => visit.author_role === "veterinarian");
 
   const handleToggleReminder = async (id: string) => {
     const reminder = reminders.find((item) => item.id === id);
@@ -102,7 +108,38 @@ export default function OwnerDashboardPage() {
       />
 
       <div className="p-4 sm:p-6 md:p-8 space-y-7 md:space-y-10 max-w-7xl w-full">
-        {/* ACTIVE REMINDERS ALERT */}
+        <OnboardingChecklist title="ابدأ بخطوات بسيطة" steps={[
+          { label: "أكمل رقم الهاتف والمحافظة", href: "/owner/settings", done: Boolean(currentProfile?.phone && currentProfile?.governorate) },
+          { label: "أضف أول حيوان", href: "/owner/pets/new", done: pets.length > 0 },
+          { label: "اربط حيوانًا بطبيب", href: "/veterinarians", done: connectedLinks.some((link) => link.status === "accepted") },
+          { label: "تابع المواعيد الطبية", href: "/owner/reminders", done: reminders.length > 0 },
+        ]} />
+
+        <section className="grid gap-3 sm:grid-cols-3" aria-label="ملخص الرعاية">
+          <div className="rounded-2xl border border-border bg-card p-4 text-right">
+            <p className="text-xs text-muted-foreground">أقرب موعد أو جرعة</p>
+            {nextReminder ? <><p className="mt-1 font-bold">{nextReminder.title}</p><p className="mt-1 text-xs text-primary">{formatArabicDate(nextReminder.due_date)}</p></> : <Link href="/owner/reminders" className="mt-1 block text-sm font-semibold text-primary">لا يوجد موعد قادم — أضف تذكيرًا</Link>}
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-4 text-right">
+            <p className="text-xs text-muted-foreground">آخر زيارة بيطرية</p>
+            {lastVetVisit ? <><p className="mt-1 font-bold">{pets.find((pet) => pet.id === lastVetVisit.pet_id)?.name || "حيوانك"}</p><p className="mt-1 text-xs text-muted-foreground">{formatArabicDate(lastVetVisit.visit_date)}</p></> : <Link href="/veterinarians" className="mt-1 block text-sm font-semibold text-primary">لا توجد زيارة موثقة بعد — ابحث عن طبيب</Link>}
+          </div>
+          <div className={`rounded-2xl border p-4 text-right ${overdueReminders.length ? "border-amber-300 bg-amber-50" : "border-border bg-card"}`}>
+            <p className="text-xs text-muted-foreground">حالة المتابعة</p>
+            <p className="mt-1 font-bold">{overdueReminders.length ? `${overdueReminders.length} موعد متأخر` : pets.length ? "لا توجد مواعيد متأخرة" : "أضف حيوانًا لبدء المتابعة"}</p>
+            {overdueReminders.length > 0 && <Link href="/owner/reminders" className="mt-1 inline-block text-xs font-semibold text-amber-800 underline">راجع المواعيد المتأخرة</Link>}
+          </div>
+        </section>
+
+        {/* Support link */}
+        <div className="mt-6 text-right">
+          <Link href="/support" className="text-primary underline">دعم / تقارير الأخطاء</Link>
+        </div>
+        {/* Medical timeline for first pet */}
+        {pets.length > 0 && (
+          <MedicalTimeline petId={pets[0].id} />
+        )}
+
         {activeReminders.length > 0 && (
           <FadeIn direction="down" duration={0.4}>
             <div className="relative overflow-hidden rounded-3xl border border-amber-300/60 border-s-[6px] border-s-amber-500 bg-amber-50 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-right shadow-sm">

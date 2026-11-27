@@ -16,6 +16,7 @@ export default function VetProfilePage() {
   const [clinicName, setClinicName] = useState("");
   const [fee, setFee] = useState(0);
   const [emergency, setEmergency] = useState(false);
+  const [openingHours, setOpeningHours] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -25,14 +26,14 @@ export default function VetProfilePage() {
       if (!user) { window.location.assign("/auth/login"); return; }
       setVetId(user.id);
       const { data, error } = await supabase.from("veterinarian_profiles").select("*").eq("id", user.id).single();
-      if (!error && data) { setBio(data.bio || ""); setClinicName(data.clinic_affiliation_name || ""); setFee(data.consultation_fee || 0); setEmergency(!!data.emergency_available); }
+      if (!error && data) { setBio(data.bio || ""); setClinicName(data.clinic_affiliation_name || ""); setFee(data.consultation_fee || 0); setEmergency(!!data.emergency_available); setOpeningHours(data.opening_hours || {}); }
     };
     load();
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await createClient().from("veterinarian_profiles").update({ bio, clinic_affiliation_name: clinicName, consultation_fee: Number(fee), emergency_available: emergency, updated_at: new Date().toISOString() }).eq("id", vetId);
+    const { error } = await createClient().from("veterinarian_profiles").update({ bio, clinic_affiliation_name: clinicName, consultation_fee: Number(fee), emergency_available: emergency, opening_hours: openingHours, updated_at: new Date().toISOString() }).eq("id", vetId);
     if (error) { window.alert(error.message); return; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -97,6 +98,19 @@ export default function VetProfilePage() {
                   </label>
                 </div>
               </div>
+
+              <fieldset className="space-y-3 rounded-xl border border-border p-4">
+                <legend className="px-2 text-sm font-bold">ساعات العمل المعروضة للمرضى</legend>
+                <p className="text-xs text-muted-foreground">اكتب الفترة مثل 10:00 - 18:00 أو «مغلق».</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"].map((day) => (
+                    <div key={day} className="flex items-center gap-2">
+                      <Label htmlFor={`hours-${day}`} className="w-20 shrink-0">{day}</Label>
+                      <Input id={`hours-${day}`} value={openingHours[day] || ""} onChange={(e) => setOpeningHours((hours) => ({ ...hours, [day]: e.target.value }))} placeholder="10:00 - 18:00 / مغلق" />
+                    </div>
+                  ))}
+                </div>
+              </fieldset>
 
               {saved && (
                 <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs flex items-center gap-2">
