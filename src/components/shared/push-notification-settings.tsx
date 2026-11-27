@@ -42,6 +42,16 @@ export function PushNotificationSettings() {
     return () => { alive = false; };
   }, []);
 
+  useEffect(() => {
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data?.type === "VETBOX_PUSH_RECEIVED") {
+        setMessage(`وصل إشعار «${String(event.data.title || "إشعار جديد").slice(0, 80)}» إلى Service Worker.`);
+      }
+    };
+    navigator.serviceWorker?.addEventListener("message", handleServiceWorkerMessage);
+    return () => navigator.serviceWorker?.removeEventListener("message", handleServiceWorkerMessage);
+  }, []);
+
   const enable = async () => {
     setBusy(true);
     setMessage("");
